@@ -1,0 +1,4 @@
+three.js r186 (npm three@0.186.1), MIT License — see LICENSE.
+Subset vendorizzato per la Web UI (F0): build/three.module.js, build/three.core.js,
+examples/jsm/loaders/GLTFLoader.js, examples/jsm/utils/{BufferGeometryUtils,SkeletonUtils}.js.
+Copiato da src/ui_web/node_modules/three senza modifiche.

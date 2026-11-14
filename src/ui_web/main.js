@@ -1,6 +1,6 @@
 // Last updated: 2026-11-14
-import * as THREE from '/src/ui_web/node_modules/three/build/three.module.js';
-import { GLTFLoader } from '/src/ui_web/node_modules/three/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const canvas = document.querySelector('#viewport');
 const message = document.querySelector('#message');

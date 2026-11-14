@@ -35,3 +35,4 @@ logs/
 /rasterio
 scripts/np
 scripts/rasterio
+reports/web_runs/

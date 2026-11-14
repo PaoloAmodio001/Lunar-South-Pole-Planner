@@ -91,6 +91,13 @@ canvas.chart{height:78px}
 .lroc-quality-warning{margin-top:12px;padding:10px;border-left:2px solid #e8b45e;background:rgba(232,180,94,.07);color:#c4cfda;font-size:10px;line-height:1.6}
 .lroc-quality-warning ul{margin:5px 0 0;padding-left:17px}
 @media(max-width:900px){.lroc-quality-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mission-list{margin:6px 0 0;padding-left:17px;font-size:10px;line-height:1.6;color:#c4cfda}
+.mission-list a{color:var(--cyan)}
+.mission-error{color:#ff8a7a}.mission-ok{color:#7fe0a8}
+.mission-pre{max-height:220px;overflow:auto;font-size:9px;background:#0a1520;border:1px solid #192838;border-radius:4px;padding:8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.mission-details{margin-top:6px;font-size:10px}.mission-details summary{cursor:pointer;color:#9aafc2}
+.mission-table-wrap{max-height:240px}
+#missionEngineSection .action{margin-right:6px}
 .engineering-section{margin:14px 12px;padding:13px;border:1px solid #263b50;border-radius:8px;background:rgba(10,22,36,.72)}
 .engineering-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}
 .engineering-grid label{display:block;min-width:0;color:#9aafc2;font-size:10px}
@@ -513,6 +520,23 @@ body.profile-home #changeProfile {display:none}
    <div id="analyticsDiagnosis" class="window-notice">In attesa di campioni astronomici.</div>
   </div>
 
+    <section class="engineering-section" id="missionEngineSection">
+     <div class="windows-heading">
+      <span>MISSION ENGINE · ORCHESTRATOR</span>
+      <span class="tag" id="missionState">IDLE</span>
+     </div>
+     <div class="engineering-grid">
+      <label>Configurazione di missione<select id="missionConfigSelect"></select></label>
+      <label>File JSON<input id="missionConfigFile" type="file" accept=".json,application/json" hidden></label>
+     </div>
+     <button id="missionValidate" class="action">VALIDATE CONFIG</button>
+     <button id="missionRun" class="action">RUN MISSION</button>
+     <div id="missionStatusText" class="engineering-result">Nessuna missione avviata da questa interfaccia.</div>
+     <ul id="missionValidation" class="mission-list"></ul>
+     <div id="missionResults"></div>
+     <div class="window-notice">Esecuzione del vero orchestratore (src/mission_orchestrator.py). Risultati preliminari: non certificano la sicurezza di atterraggio.</div>
+    </section>
+
     <section class="lroc-quality-section" id="lrocQualitySection">
      <div class="windows-heading">
       <span>LROC TERRAIN QUALITY · DTM CONFIDENCE</span>
@@ -625,11 +649,13 @@ body.profile-home #changeProfile {display:none}
 <script type="importmap">
 {
   "imports": {
-    "three": "/src/ui_web/node_modules/three/build/three.module.js"
+    "three": "/vendor/three/build/three.module.js",
+    "three/addons/": "/vendor/three/examples/jsm/"
   }
 }
 </script>
-<script type="module" src="/src/ui_web/main.js"></script>
+<script type="module" src="/main.js"></script>
+<script src="/mission.js" defer></script>
 
 <script>
 (() => {
