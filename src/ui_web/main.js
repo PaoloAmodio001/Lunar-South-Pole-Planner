@@ -142,18 +142,23 @@ function animate(){
 }
 animate();
 
-const sites = {
- 'Shackleton':[-89.7668,-171.87],
- 'Connecting Ridge':[-89.4632,-137.49],
- 'Nobile':[-85.4381,37.36667]
-};
+// Coordinate dei siti: unica fonte src.astronomy.SITES tramite /api/sites (F5).
+let sites = {};
+fetch('/api/sites', {cache: 'no-store'})
+ .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+ .then(data => {
+  sites = Object.fromEntries((data.sites || []).map(s => [s.name, [s.latitude_deg, s.longitude_east_deg]]));
+  update();
+ })
+ .catch(() => { document.querySelector('#coords').textContent = 'coordinate non disponibili'; });
 const site = document.querySelector('#site');
 function update(){
  const name=site.value;
- const [lat,lon]=sites[name] || sites.Shackleton;
+ const coords=sites[name];
  document.querySelector('#targetName').textContent=name;
  document.querySelector('#siteLabel').textContent='TARGET: '+name.toUpperCase();
- document.querySelector('#coords').textContent=`${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+ document.querySelector('#coords').textContent=coords
+  ? `${coords[0].toFixed(2)}°, ${coords[1].toFixed(2)}°` : 'Loading…';
  const duration=Math.max(1,Math.min(720,Number(document.querySelector('#duration').value)||48));
  document.querySelector('#durationValue').textContent=duration;
  document.querySelector('#scienceValue').textContent=document.querySelector('#science').value+' / 5';
@@ -173,24 +178,6 @@ dateInput.value=now.toISOString().slice(0,16);
 document.querySelector('#publicDate').value = dateInput.value;
 update();
 
-function drawChart(id,variant){
- const c=document.getElementById(id),ctx=c.getContext('2d');
- const dpr=window.devicePixelRatio||1;
- const w=c.clientWidth,h=c.clientHeight;
- c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);
- ctx.clearRect(0,0,w,h);
- ctx.strokeStyle='#203141';ctx.lineWidth=1;
- for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(0,h*i/5);ctx.lineTo(w,h*i/5);ctx.stroke()}
- ctx.strokeStyle=variant?'#f4b95f':'#5be7f5';ctx.lineWidth=2;ctx.beginPath();
- for(let x=0;x<w;x++){
-  const t=x/w;
-  const y=variant?h*(.48+.17*Math.sin(t*13)+.08*Math.sin(t*39)):h*(.55-.22*Math.sin(t*6)-.09*Math.cos(t*18));
-  if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
- }
- ctx.stroke();
- ctx.fillStyle='#8295a9';ctx.font='9px sans-serif';ctx.fillText('Illustrative visualization — not measured data',4,h-3);
-}
-function charts(){drawChart('chart1',0);drawChart('chart2',1)}
 // I grafici vengono disegnati esclusivamente con campioni JPL reali.
 
 
@@ -286,80 +273,6 @@ function drawEphemerisChart(canvas, observations, field, threshold, color, windo
 
 
 
-function calculateMissionAnalytics(observations, thresholds, windows) {
-  const values = (field) => observations
-    .map(o => Number(o[field]))
-    .filter(Number.isFinite);
-
-  const sun = values('sun_elevation_deg');
-  const earth = values('earth_elevation_deg');
-  const minSun = Number(thresholds.sun_elevation_deg);
-  const minEarth = Number(thresholds.earth_elevation_deg);
-
-  const valid = observations.filter(o =>
-    Number.isFinite(Number(o.sun_elevation_deg)) &&
-    Number.isFinite(Number(o.earth_elevation_deg))
-  );
-
-  const sunPass = valid.filter(o => Number(o.sun_elevation_deg) >= minSun).length;
-  const earthPass = valid.filter(o => Number(o.earth_elevation_deg) >= minEarth).length;
-  const bothPass = valid.filter(o =>
-    Number(o.sun_elevation_deg) >= minSun &&
-    Number(o.earth_elevation_deg) >= minEarth
-  ).length;
-
-  const stats = arr => arr.length ? {
-    min: Math.min(...arr),
-    max: Math.max(...arr),
-    mean: arr.reduce((a, b) => a + b, 0) / arr.length,
-    samples: arr.length
-  } : null;
-
-  const pct = n => valid.length ? 100 * n / valid.length : 0;
-
-  const windowSpans = windows.map(w => {
-    if (Number.isFinite(Number(w.sampled_span_hours))) {
-      return Number(w.sampled_span_hours);
-    }
-    return Math.max(0, Number(w.duration_samples || 1) - 1);
-  });
-
-  const totalWindowHours = windowSpans.reduce((a, b) => a + b, 0);
-  let diagnosis;
-
-  if (!valid.length) {
-    diagnosis = 'Campioni validi insufficienti per formulare una diagnosi.';
-  } else if (bothPass > 0) {
-    diagnosis = `${bothPass} campioni soddisfano simultaneamente entrambe le soglie.`;
-  } else if (sunPass === 0 && earthPass === 0) {
-    diagnosis = 'Nessuna condizione soddisfatta: sia il Sole sia la Terra restano sotto le rispettive soglie.';
-  } else if (sunPass === 0) {
-    diagnosis = 'Vincolo solare limitante: nessun campione raggiunge la soglia del Sole.';
-  } else if (earthPass === 0) {
-    diagnosis = 'Vincolo terrestre limitante: nessun campione raggiunge la soglia della Terra.';
-  } else {
-    diagnosis = 'Sole e Terra superano le soglie separatamente, ma non negli stessi campioni.';
-  }
-
-  return {
-    sample_count: observations.length,
-    valid_sample_count: valid.length,
-    thresholds_deg: { sun: minSun, earth: minEarth },
-    sun: { ...stats(sun), passing_samples: sunPass, passing_percent: pct(sunPass) },
-    earth: { ...stats(earth), passing_samples: earthPass, passing_percent: pct(earthPass) },
-    simultaneous: {
-      passing_samples: bothPass,
-      passing_percent: pct(bothPass)
-    },
-    operational_windows: {
-      count: windows.length,
-      total_sampled_span_hours: totalWindowHours,
-      spans_hours: windowSpans,
-      earliest_start_utc: windows.length ? windows[0].start_utc : null
-    },
-    diagnosis
-  };
-}
 
 function renderMissionAnalytics(a) {
   const put = (id, value) => {
@@ -509,8 +422,11 @@ async function updateEphemerides() {
     }
 
     const windows = data.windows || [];
-    const analytics = data.analytics ||
-      calculateMissionAnalytics(observations, data.thresholds, windows);
+    // Analytics calcolati solo dal backend (src.mission_analytics), F5.
+    const analytics = data.analytics;
+    if (!analytics) {
+      throw new Error('Analytics non forniti dal server: nessun ricalcolo lato client.');
+    }
 
     if (analytics.schema &&
         analytics.schema !== 'lunar-ephemeris-analytics/1.0') {

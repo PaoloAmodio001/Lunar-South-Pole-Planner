@@ -28,7 +28,9 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from src.paths import PROJECT_ROOT  # unica definizione della radice (F2/F5)
+from src.mission_orchestrator import CONFIG_PATH_KEYS, resolve_config_paths
+
 RUNS_DIR = PROJECT_ROOT / "reports" / "web_runs"
 RUN_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 MAX_CONFIG_BYTES = 256 * 1024
@@ -42,12 +44,9 @@ CONFIG_CATALOG = {
     },
 }
 
-# Chiavi che l'orchestratore legge come percorsi di input.
-READ_PATH_KEYS = {
-    "dem_path", "lola_path", "lroc_path", "confidence_path", "density_path",
-    "error_path", "lola_density_path", "lola_error_path", "horizon_json",
-    "raster_path", "comparison_path",
-}
+# Chiavi che l'orchestratore legge come percorsi di input: definite una sola
+# volta nel motore (mission_orchestrator.CONFIG_PATH_KEYS), F5.
+READ_PATH_KEYS = CONFIG_PATH_KEYS
 ALLOWED_READ_ROOTS = ("data", "reports")
 ALLOWED_WRITE_ROOTS = ("reports",)
 
@@ -213,20 +212,14 @@ def validate_config(config, *, check_site_identity=True):
 def _preflight_site_identity(config, errors):
     """Esegue il controllo preventivo dell'orchestratore stesso.
 
-    ``validate_mission_site_identity`` apre i raster con percorsi relativi alla
-    cwd; qui i percorsi (già validati) vengono resi assoluti su una COPIA.
+    Usa la stessa risoluzione dei percorsi del motore (resolve_config_paths),
+    quindi il risultato coincide con quello di run_mission_workflow (F5).
     """
     from src.lunar_geometry import SiteIdentityError
     from src.mission_orchestrator import validate_mission_site_identity
 
-    absolute = json.loads(json.dumps(config))
-    for cfg in absolute.values():
-        if isinstance(cfg, dict):
-            for key, value in list(cfg.items()):
-                if key in READ_PATH_KEYS and isinstance(value, str):
-                    cfg[key] = str(PROJECT_ROOT / value)
     try:
-        summary = validate_mission_site_identity(absolute)
+        summary = validate_mission_site_identity(resolve_config_paths(config))
     except SiteIdentityError as exc:
         errors.append(f"Controllo identità del sito: {exc}")
         return None

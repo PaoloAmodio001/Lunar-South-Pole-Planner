@@ -25,10 +25,12 @@ from pathlib import Path
 from threading import Thread, Timer
 from urllib.parse import urlparse, parse_qs, unquote
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 UI_DIR = Path(__file__).resolve().parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+# Bootstrap minimo per l'avvio come script; poi la radice viene da src.paths (F5).
+if str(UI_DIR.parents[1]) not in sys.path:
+    sys.path.insert(0, str(UI_DIR.parents[1]))
+
+from src.paths import PROJECT_ROOT
 
 from src.astronomy import SITES, query_observations, AstronomyError
 from src.mission_planning import find_operational_windows
