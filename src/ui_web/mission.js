@@ -180,6 +180,7 @@
       return;
     }
     runBtn.disabled = false;
+    loadReports();
     statusText.textContent = `Esecuzione ${run.id} terminata (${run.finished_utc}). ` +
       `Stato del motore: ${run.engine_status || 'nessun report'} · exit code ${run.exit_code}.`;
     renderResults(run);
@@ -320,7 +321,29 @@
     results.appendChild(cfg);
   }
 
+  async function loadReports() {
+    const list = $('missionReports');
+    if (!list) return;
+    const { ok, data } = await api('/api/mission/reports').catch(() => ({ ok: false, data: {} }));
+    list.replaceChildren();
+    if (!ok) { list.appendChild(el('li', 'Elenco report non disponibile.')); return; }
+    const reports = data.reports || [];
+    if (!reports.length) { list.appendChild(el('li', 'Nessun report prodotto dalla Web UI.')); return; }
+    for (const r of reports) {
+      const li = el('li');
+      const open = el('a', `${r.generated_utc || '—'} · ${r.site || 'sito non dichiarato'} · ` +
+        `${r.engine_status || 'nessuno stato'} · ${r.config_label || ''}`);
+      open.href = '#';
+      open.addEventListener('click', ev => { ev.preventDefault(); track(r.run_id); });
+      const json = el('a', ' [mission_report.json]');
+      json.href = r.report_url; json.target = '_blank'; json.rel = 'noopener';
+      li.append(open, json, el('span', ` · ${r.artifacts.length} artefatti`));
+      list.appendChild(li);
+    }
+  }
+
   async function init() {
+    loadReports();
     await loadConfigs().catch(() => {});
     const { ok, data } = await api('/api/mission/runs').catch(() => ({ ok: false, data: {} }));
     if (!ok) return;

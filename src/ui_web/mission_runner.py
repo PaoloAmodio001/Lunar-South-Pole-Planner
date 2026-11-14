@@ -466,6 +466,31 @@ class MissionManager:
             payload["stderr_tail"] = _tail(self._run_dir(run_id) / "stderr.log")
         return payload
 
+    def list_reports(self, limit=20):
+        """Report realmente presenti su disco, per esecuzione (F3). Sola lettura."""
+        reports = []
+        for run in self.list_runs(limit=limit):
+            report = self.read_report(run["id"])
+            if report is None:
+                continue
+            artifacts = []
+            for key, path in (report.get("artifacts") or {}).items():
+                if self._artifact_path(run["id"], path) is not None:
+                    artifacts.append({"key": key,
+                                      "url": f"/api/mission/runs/{run['id']}/artifacts/{key}"})
+            reports.append({
+                "run_id": run["id"],
+                "state": run["state"],
+                "engine_status": report.get("status"),
+                "engine_run_id": report.get("run_id"),
+                "generated_utc": report.get("generated_utc"),
+                "config_label": run.get("config_label"),
+                "site": (report.get("site_identity") or {}).get("site"),
+                "report_url": f"/api/mission/runs/{run['id']}/report",
+                "artifacts": artifacts,
+            })
+        return reports
+
     def read_report(self, run_id):
         path = self._run_dir(run_id) / "output" / "mission_report.json"
         if not path.is_file():

@@ -269,10 +269,29 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(500, {"status": "error",
                                         "error": f"Lettura risultati non riuscita: {exc}"})
 
+    def handle_mission_status(self, query):
+        """Alias F3: stato dell'esecuzione indicata (?id=) o di quella in corso/più recente."""
+        run_id = (query.get("id") or [None])[0]
+        if run_id is None:
+            run_id = MISSIONS.running_id
+            if run_id is None:
+                runs = MISSIONS.list_runs(limit=1)
+                run_id = runs[0]["id"] if runs else None
+        if run_id is None:
+            return self.send_json(200, {"status": "ok", "running_id": None, "run": None})
+        try:
+            payload = MISSIONS.status_payload(run_id)
+        except KeyError:
+            return self.send_json(404, {"status": "error", "error": "Esecuzione non trovata."})
+        return self.send_json(200, {"status": "ok", "running_id": MISSIONS.running_id,
+                                    "run": payload})
+
     def do_POST(self):
         parsed = urlparse(self.path)
         if parsed.path in ("/api/mission/validate", "/api/mission/runs"):
             return self.handle_mission_post(parsed.path)
+        if parsed.path == "/api/mission/run":  # alias F3 di /api/mission/runs
+            return self.handle_mission_post("/api/mission/runs")
         routes = {
             "/api/communications/link-budget": calculate_link_budget,
             "/api/thermal/simulate": simulate_single_node_thermal,
@@ -296,6 +315,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/sites":
+            return self.send_json(200, {"status": "ok", "source": "src.astronomy.SITES", "sites": [
+                {"name": name, "latitude_deg": lat, "longitude_east_deg": lon}
+                for name, (lat, lon) in SITES.items()]})
+        if parsed.path == "/api/mission/status":
+            return self.handle_mission_status(parse_qs(parsed.query))
+        if parsed.path == "/api/mission/reports":
+            return self.send_json(200, {"status": "ok", "reports": MISSIONS.list_reports()})
         if parsed.path.startswith("/api/mission/"):
             return self.handle_mission_get(parsed.path)
         if parsed.path == "/api/terrain/lroc-quality":
