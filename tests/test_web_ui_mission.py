@@ -142,7 +142,8 @@ def test_real_orchestrator_completed_with_errors(manager):
     assert final["exit_code"] == 1
     steps = manager.status_payload(job["id"])["result"]["steps"]
     assert steps == [{"name": "site_selection", "status": "failed",
-                      "error": "FileNotFoundError: DEM non trovato: data/__f1_test_missing__.tif"}]
+                      "error": "FileNotFoundError: DEM non trovato: "
+                               f"{PROJECT_ROOT / 'data/__f1_test_missing__.tif'}"}]
     ranking = manager.status_payload(job["id"])["result"]["site_ranking"]
     assert ranking["available"] is False and "fallito" in ranking["reason"]
 

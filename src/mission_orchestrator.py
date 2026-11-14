@@ -2,6 +2,12 @@
 """Orchestratore preliminare per missioni lunari multi-rover."""
 from __future__ import annotations
 import re
+import sys
+
+if __package__ in (None, ""):
+    # Esecuzione come script (python /percorso/src/mission_orchestrator.py):
+    # rende importabile il package "src" indipendentemente dalla cwd.
+    sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1]))
 
 from datetime import datetime, timedelta, timezone
 import json
@@ -39,9 +45,52 @@ from src.lunar_geometry import (
     validate_site_in_raster,
 )
 from src.mission_report import build_mission_report, write_mission_report
+from src.paths import PROJECT_ROOT, resolve_project_path
 
 
 SCHEMA = "lunar-mission-orchestration/1.0"
+
+
+# Chiavi di configurazione lette come percorsi (per sezione), F2.
+CONFIG_PATH_KEYS = frozenset({
+    "dem_path", "lola_path", "lroc_path", "confidence_path", "density_path",
+    "error_path", "lola_density_path", "lola_error_path", "horizon_json",
+    "raster_path", "comparison_path", "plan_json",
+})
+DEFAULT_OUTPUT_DIR = "reports/mission"
+
+
+def resolve_config_file(config_path):
+    """Percorso del file di configurazione passato dall'utente.
+
+    Assoluto: invariato. Relativo: prima rispetto alla cwd (convenzione degli
+    argomenti da riga di comando), poi rispetto a PROJECT_ROOT.
+    """
+    path = Path(config_path).expanduser()
+    if path.is_absolute() or path.is_file():
+        return path.resolve()
+    return resolve_project_path(path)
+
+
+def resolve_config_paths(config: dict) -> dict:
+    """Copia della configurazione con i percorsi relativi ancorati a PROJECT_ROOT.
+
+    Riguarda solo ``output_dir``, le chiavi di CONFIG_PATH_KEYS e
+    ``journal.path``; nessun altro valore viene toccato.
+    """
+    resolved = dict(config)
+    if resolved.get("output_dir") is not None:
+        resolved["output_dir"] = str(resolve_project_path(resolved["output_dir"]))
+    for name, section in config.items():
+        if not isinstance(section, dict):
+            continue
+        new_section = dict(section)
+        for key, value in section.items():
+            if isinstance(value, (str, Path)) and (
+                    key in CONFIG_PATH_KEYS or (name == "journal" and key == "path")):
+                new_section[key] = str(resolve_project_path(value))
+        resolved[name] = new_section
+    return resolved
 
 
 def _read_json(path):
@@ -289,7 +338,7 @@ def validate_mission_site_identity(config: dict) -> dict:
         for key in keys:
             value = cfg.get(key)
             if value:
-                rasters.append((f"{section}.{key}", str(value)))
+                rasters.append((f"{section}.{key}", str(resolve_project_path(value))))
 
     declared = []  # (sorgente, etichetta, nome canonico o None)
     astronomy_cfg = config.get("astronomy")
@@ -353,10 +402,13 @@ def validate_mission_site_identity(config: dict) -> dict:
 
 
 def run_mission_workflow(config_path):
-    config = _read_json(config_path)
+    config_path = resolve_config_file(config_path)
+    # I percorsi relativi della configurazione sono relativi a PROJECT_ROOT,
+    # non alla directory di avvio (F2).
+    config = resolve_config_paths(_read_json(config_path))
     # Controllo geografico preventivo: interrompe prima di ogni step.
     site_identity = validate_mission_site_identity(config)
-    output_dir = Path(config.get("output_dir", "reports/mission"))
+    output_dir = resolve_project_path(config.get("output_dir", DEFAULT_OUTPUT_DIR))
     output_dir.mkdir(parents=True, exist_ok=True)
 
     run_id = str(uuid.uuid4())
@@ -1359,7 +1411,8 @@ def run_mission_workflow(config_path):
         def energy_assessment():
             plan_file = energy_cfg.get(
                 "plan_json",
-                report["artifacts"].get("rover_plan", "reports/rover_plan.json"),
+                report["artifacts"].get(
+                    "rover_plan", str(PROJECT_ROOT / "reports/rover_plan.json")),
             )
             required = (
                 "mass_kg", "rolling_resistance_coefficient",
@@ -1426,7 +1479,7 @@ def run_mission_workflow(config_path):
 
         artifact_path = Path(artifact_value)
         if not artifact_path.is_absolute():
-            artifact_path = Path.cwd() / artifact_path
+            artifact_path = PROJECT_ROOT / artifact_path
 
         if not artifact_path.exists():
             missing_artifacts.append(artifact_name)
@@ -1534,7 +1587,7 @@ def run_mission_workflow(config_path):
                 ),
                 horizon_hours=int(mission_report_cfg.get("horizon_hours", 48)),
                 horizons_observations=observations,
-                project_root=Path.cwd(),
+                project_root=PROJECT_ROOT,
                 rover_plan_path=report["artifacts"].get(
                     "rover_plan", output_dir / "rover_plan.json"
                 ),
@@ -1665,7 +1718,7 @@ def run_mission_workflow(config_path):
                     continue
                 path = Path(value) if value else None
                 if path is not None and not path.is_absolute():
-                    path = Path.cwd() / path
+                    path = PROJECT_ROOT / path
                 if path is None or not path.exists():
                     missing_artifacts.append(name)
 
@@ -1865,7 +1918,7 @@ def run_mission_workflow(config_path):
                         "planning_date", datetime.now(timezone.utc).date().isoformat()
                     ),
                     horizon_hours=int(config.get("mission_report", {}).get("horizon_hours", 48)),
-                    project_root=Path.cwd(),
+                    project_root=PROJECT_ROOT,
                     journal_path=journal_cfg.get("path", output_dir / "mission_events.jsonl"),
                     journal_enabled=True,
                     run_id=run_id,

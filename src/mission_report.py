@@ -11,6 +11,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from src.paths import PROJECT_ROOT, resolve_project_path
+
 
 def _read_json(path: Path) -> tuple[Any | None, str | None]:
     if not path.is_file():
@@ -27,7 +29,7 @@ def build_mission_report(
     planning_date: str,
     horizon_hours: int,
     horizons_observations: list | None = None,
-    project_root: str | Path = ".",
+    project_root: str | Path | None = None,
     rover_plan_path: str | Path | None = None,
     energy_assessment_path: str | Path | None = None,
     journal_path: str | Path | None = None,
@@ -35,7 +37,7 @@ def build_mission_report(
     run_id: str | None = None,
 ) -> dict:
     """Create a status report without performing network calls or modifying DEMs."""
-    root = Path(project_root).resolve()
+    root = Path(project_root).resolve() if project_root is not None else PROJECT_ROOT
     observations = horizons_observations or []
     obs_by_object: dict[str, list[dict]] = {"Sole": [], "Terra": []}
     for label, row in observations:
@@ -206,7 +208,7 @@ def build_mission_report(
 
 def write_mission_report(report: dict, output_dir: str | Path = "reports") -> tuple[Path, Path]:
     """Write JSON and human-readable Markdown copies of a mission report."""
-    out = Path(output_dir)
+    out = resolve_project_path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     json_path = out / "mission_status_report.json"
     md_path = out / "mission_status_report.md"
@@ -482,7 +484,7 @@ def write_mission_report(report: dict, output_dir: str | Path = "reports") -> tu
         try:
             artifact_file = Path(artifact_path)
             if not artifact_file.is_absolute():
-                artifact_file = Path.cwd() / artifact_file
+                artifact_file = PROJECT_ROOT / artifact_file
 
             if artifact_file.suffix.lower() != ".json":
                 lines.append(
