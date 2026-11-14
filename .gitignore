@@ -36,3 +36,5 @@ logs/
 scripts/np
 scripts/rasterio
 reports/web_runs/
+/json
+/sys
