@@ -10,6 +10,8 @@ import json
 from pathlib import Path
 import numpy as np
 
+from src.lunar_geometry import geographic_to_grid_azimuth
+
 
 def estimate_direct_solar_visibility(
     horizon_json: str | Path,
@@ -17,6 +19,7 @@ def estimate_direct_solar_visibility(
     *,
     grid_azimuth_offset_deg: float,
     output_path: str | Path = "reports/solar_illumination_diagnostic.json",
+    azimuth_mapping_details: dict | None = None,
 ) -> Path:
     """Compare solar elevation to DEM horizon after explicit azimuth rotation.
 
@@ -48,7 +51,7 @@ def estimate_direct_solar_visibility(
             time=str(obs["time_utc"])
         except (KeyError, TypeError, ValueError):
             continue
-        grid_az=(h_az+float(grid_azimuth_offset_deg))%360
+        grid_az=geographic_to_grid_azimuth(h_az, float(grid_azimuth_offset_deg))
         # Interpolazione circolare aggiungendo un campione ai due lati.
         az_ext=np.concatenate(([az[-1]-360],az,[az[0]+360]))
         el_ext=np.concatenate(([elev[-1]],elev,[elev[0]]))
@@ -64,9 +67,11 @@ def estimate_direct_solar_visibility(
         "schema":"lunar-solar-illumination-diagnostic/1.0",
         "generated_utc":datetime.now(timezone.utc).isoformat(),
         "horizon_profile":str(src),
-        "azimuth_mapping":{"convention":"grid_azimuth=(Horizons azimuth + offset) mod 360",
+        "azimuth_mapping":{**(azimuth_mapping_details or {}),
+                            "convention":"grid_azimuth=(Horizons azimuth + offset) mod 360",
                             "offset_deg":float(grid_azimuth_offset_deg),
-                            "independently_validated":False},
+                            "independently_validated":False,
+                            "horizons_frame_equivalence_verified":False},
         "observation_count":len(rows),
         "estimated_sun_visible_count":sum(r["estimated_direct_sun_visible"] for r in rows),
         "observations":rows,

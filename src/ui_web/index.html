@@ -76,6 +76,21 @@ canvas.chart{height:78px}
 .analytics-card span{color:#9aafc2;font-size:11px}
 @media(max-width:900px){.analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+.lroc-quality-section{margin:14px 12px;padding:14px;border:1px solid #263b50;border-radius:8px;background:rgba(10,22,36,.82)}
+.lroc-quality-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}
+.lroc-quality-card{min-width:0;padding:11px;border:1px solid #263b50;border-radius:6px;background:#101e2d}
+.lroc-quality-card small{display:block;color:#8295a9;font-size:9px;letter-spacing:.7px}
+.lroc-quality-card strong{display:block;margin-top:7px;color:#e8f1fa;font-size:17px;overflow-wrap:anywhere}
+.lroc-quality-card span{display:block;margin-top:4px;color:#9aafc2;font-size:10px}
+.lroc-quality-bar{display:flex;width:100%;height:13px;margin:14px 0 8px;overflow:hidden;border-radius:4px;background:#263b50}
+.lroc-quality-bar span{height:100%;min-width:0}
+.lroc-primary{background:#55c99a}.lroc-interpolated{background:#e8b45e}
+.lroc-unresolved{background:#bd8bea}.lroc-invalid{background:#526477}
+.lroc-quality-legend{display:flex;flex-wrap:wrap;gap:12px;color:#9aafc2;font-size:10px}
+.lroc-quality-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:2px}
+.lroc-quality-warning{margin-top:12px;padding:10px;border-left:2px solid #e8b45e;background:rgba(232,180,94,.07);color:#c4cfda;font-size:10px;line-height:1.6}
+.lroc-quality-warning ul{margin:5px 0 0;padding-left:17px}
+@media(max-width:900px){.lroc-quality-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .engineering-section{margin:14px 12px;padding:13px;border:1px solid #263b50;border-radius:8px;background:rgba(10,22,36,.72)}
 .engineering-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}
 .engineering-grid label{display:block;min-width:0;color:#9aafc2;font-size:10px}
@@ -200,6 +215,18 @@ body.public-mode .overlay {z-index:1}
 .public-ui h2 {font-size:22px;margin:10px 0}
 .public-ui p {font-size:11px;line-height:1.6;color:#a9bacb}
 .public-label {font-size:9px;letter-spacing:1.5px;color:#91a8bb;margin:17px 0 8px}
+.public-controls {display:grid;gap:7px}
+.public-controls label {
+ font-size:9px;letter-spacing:.8px;color:#91a8bb;margin-top:5px
+}
+.public-controls input {
+ box-sizing:border-box;width:100%;min-width:0;padding:10px;
+ border:1px solid #2b4053;border-radius:5px;
+ background:#101e2d;color:#e8f2fc;font-size:12px
+}
+.public-controls input:focus {
+ outline:1px solid var(--cyan);border-color:var(--cyan)
+}
 .public-sites {display:grid;gap:7px}
 .public-site {
  width:100%;padding:11px;text-align:left;border:1px solid #2b4053;
@@ -415,6 +442,21 @@ body.profile-home #changeProfile {display:none}
   </button>
  </div>
 
+ <div class="public-label">PARAMETRI MISSIONE · UTC</div>
+ <div class="public-controls">
+  <label for="publicDate">DATA E ORA DI INIZIO (UTC)</label>
+  <input id="publicDate" type="datetime-local" required>
+
+  <label for="publicDuration">DURATA ANALISI · ORE</label>
+  <input id="publicDuration" type="number" value="48" min="1" max="720" step="1">
+
+  <label for="publicSunElevation">ELEVATION MINIMA DEL SOLE · GRADI</label>
+  <input id="publicSunElevation" type="number" value="5" min="-90" max="90" step="1">
+
+  <label for="publicEarthElevation">ELEVATION MINIMA DELLA TERRA · GRADI</label>
+  <input id="publicEarthElevation" type="number" value="5" min="-90" max="90" step="1">
+ </div>
+
  <div class="public-facts">
   <div><span>LUCE SOLARE</span><strong>Analisi astronomica</strong></div>
   <div><span>VISIBILITÀ DELLA TERRA</span><strong>Analisi geometrica</strong></div>
@@ -471,6 +513,35 @@ body.profile-home #changeProfile {display:none}
    <div id="analyticsDiagnosis" class="window-notice">In attesa di campioni astronomici.</div>
   </div>
 
+    <section class="lroc-quality-section" id="lrocQualitySection">
+     <div class="windows-heading">
+      <span>LROC TERRAIN QUALITY · DTM CONFIDENCE</span>
+      <span class="tag" id="lrocQualityStatus">LOADING</span>
+     </div>
+     <div class="lroc-quality-grid">
+      <div class="lroc-quality-card"><small>PRIMARY · CONF 14</small><strong id="lrocPrimary">—</strong><span id="lrocPrimaryArea">—</span></div>
+      <div class="lroc-quality-card"><small>INTERPOLATED · CONF 4</small><strong id="lrocInterpolated">—</strong><span id="lrocInterpolatedArea">—</span></div>
+      <div class="lroc-quality-card"><small>UNRESOLVED</small><strong id="lrocUnresolved">—</strong><span id="lrocUnresolvedArea">—</span></div>
+      <div class="lroc-quality-card"><small>INVALID / EXCLUDED</small><strong id="lrocInvalid">—</strong><span id="lrocInvalidArea">—</span></div>
+     </div>
+     <div class="lroc-quality-bar" role="img" aria-label="Distribuzione delle classi di qualità LROC">
+      <span id="lrocBarPrimary" class="lroc-primary"></span>
+      <span id="lrocBarInterpolated" class="lroc-interpolated"></span>
+      <span id="lrocBarUnresolved" class="lroc-unresolved"></span>
+      <span id="lrocBarInvalid" class="lroc-invalid"></span>
+     </div>
+     <div class="lroc-quality-legend">
+      <span><i class="lroc-primary"></i>Primary</span>
+      <span><i class="lroc-interpolated"></i>Interpolated</span>
+      <span><i class="lroc-unresolved"></i>Unresolved</span>
+      <span><i class="lroc-invalid"></i>Invalid</span>
+     </div>
+     <div class="window-notice" id="lrocCoverage">In attesa del report di qualità.</div>
+     <div class="lroc-quality-warning">
+      <strong>LIMITAZIONI SCIENTIFICHE</strong>
+      <ul id="lrocWarnings"><li>Avvertenze in caricamento.</li></ul>
+     </div>
+    </section>
 
    <div class="engineering-section">
     <div class="windows-heading">

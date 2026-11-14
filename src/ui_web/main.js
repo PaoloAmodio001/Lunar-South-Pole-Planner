@@ -170,6 +170,7 @@ document.querySelector('#reset').addEventListener('click',()=>{
 const dateInput=document.querySelector('#date');
 const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
 dateInput.value=now.toISOString().slice(0,16);
+document.querySelector('#publicDate').value = dateInput.value;
 update();
 
 function drawChart(id,variant){
@@ -441,6 +442,10 @@ function renderOperationalWindows(data, observations, windows) {
 async function updateEphemerides() {
   if (applyButton.disabled) return;
 
+  const statusMessage = document.body.classList.contains('public-mode')
+    ? document.querySelector('#publicMessage')
+    : message;
+
   const site = document.querySelector('#site').value;
   const dateInput = document.querySelector('#date');
   const hours = Number(document.querySelector('#duration').value);
@@ -450,7 +455,7 @@ async function updateEphemerides() {
   const minEarth = Number(document.querySelector('#earthElevation').value);
 
   if (!dateInput.value) {
-    message.textContent = 'Seleziona data e ora di inizio UTC.';
+    statusMessage.textContent = 'Seleziona data e ora di inizio UTC.';
     dateInput.focus();
     return;
   }
@@ -459,7 +464,7 @@ async function updateEphemerides() {
       !Number.isFinite(minEarth) || minEarth < -90 || minEarth > 90 ||
       !Number.isInteger(science) || science < 1 || science > 5 ||
       !Number.isInteger(engineering) || engineering < 1 || engineering > 5) {
-    message.textContent = 'Controlla durata, soglia e priorità: valori fuori intervallo.';
+    statusMessage.textContent = 'Controlla durata, soglia e priorità: valori fuori intervallo.';
     return;
   }
 
@@ -470,7 +475,7 @@ async function updateEphemerides() {
 
   applyButton.disabled = true;
   applyButton.textContent = 'CALCULATING…';
-  message.textContent = 'Richiesta effemeridi NASA/JPL Horizons…';
+  statusMessage.textContent = 'Richiesta effemeridi NASA/JPL Horizons…';
   if (liveStatus) liveStatus.textContent = 'CALCULATING';
 
   try {
@@ -526,7 +531,7 @@ async function updateEphemerides() {
         ).join(' | ')
       : 'Nessuna finestra soddisfa entrambe le soglie nel periodo selezionato.';
 
-    message.textContent =
+    statusMessage.textContent =
       `${data.source} · ${observations.length} campioni · ${windows.length} finestre geometriche. ` +
       summary + ' — Non include verifica ostacoli o budget radio.';
     document.querySelectorAll('.graphname')[0].textContent =
@@ -539,7 +544,7 @@ async function updateEphemerides() {
       liveStatus.textContent = 'ERROR';
       liveStatus.className = 'warn';
     }
-    message.textContent = `Effemeridi non disponibili: ${err.message}. Nessun dato dimostrativo mostrato.`;
+    statusMessage.textContent = `Effemeridi non disponibili: ${err.message}. Nessun dato dimostrativo mostrato.`;
   } finally {
     applyButton.disabled = false;
     applyButton.textContent = 'UPDATE VISUALIZATION';
@@ -547,6 +552,72 @@ async function updateEphemerides() {
 }
 
 applyButton.addEventListener('click', updateEphemerides);
+
+// Selezione dei siti candidati.
+const publicSiteButtons = document.querySelectorAll('.public-site');
+const publicAnalyzeButton = document.querySelector('#publicAnalyze');
+const publicMessage = document.querySelector('#publicMessage');
+
+const publicDate = document.querySelector('#publicDate');
+const publicDuration = document.querySelector('#publicDuration');
+const publicSunElevation = document.querySelector('#publicSunElevation');
+const publicEarthElevation = document.querySelector('#publicEarthElevation');
+
+publicSiteButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    publicSiteButtons.forEach(item => {
+      const selected = item === button;
+      item.classList.toggle('selected', selected);
+      item.setAttribute('aria-pressed', String(selected));
+    });
+
+    site.value = button.dataset.publicSite;
+    update();
+    publicMessage.textContent = `Sito selezionato: ${site.value}.`;
+  });
+});
+
+// Analisi attraverso il motore NASA/JPL già presente.
+publicAnalyzeButton.addEventListener('click', async () => {
+  if (publicAnalyzeButton.disabled) return;
+
+  if (!publicDate.value) {
+    publicMessage.textContent = 'Seleziona data e ora di inizio UTC.';
+    publicDate.focus();
+    return;
+  }
+
+  dateInput.value = publicDate.value;
+  document.querySelector('#duration').value = publicDuration.value;
+  document.querySelector('#elevation').value = publicSunElevation.value;
+  document.querySelector('#earthElevation').value = publicEarthElevation.value;
+
+  update();
+
+  publicAnalyzeButton.disabled = true;
+  publicAnalyzeButton.textContent = 'ANALISI NASA/JPL IN CORSO…';
+
+  try {
+    await updateEphemerides();
+  } finally {
+    publicAnalyzeButton.disabled = false;
+    publicAnalyzeButton.textContent = 'ANALIZZA QUESTO SITO';
+  }
+});
+
+// Apertura e chiusura della spiegazione.
+const educationToggle = document.querySelector('#educationToggle');
+const educationText = document.querySelector('#educationText');
+
+educationToggle.addEventListener('click', () => {
+  const expanded = !educationText.hidden;
+  educationText.hidden = expanded;
+  educationToggle.setAttribute('aria-expanded', String(!expanded));
+  educationToggle.textContent = expanded
+    ? 'SCOPRI COME FUNZIONA'
+    : 'NASCONDI SPIEGAZIONE';
+});
+
 window.addEventListener('resize', () => {
   // Ridisegna i grafici solo dopo aver ricevuto dati reali.
   if (window.lastEphemerides) {
@@ -779,3 +850,71 @@ document.querySelector('#exportMission').addEventListener('click', () => {
   URL.revokeObjectURL(url);
   message.textContent = 'Piano JSON esportato con effemeridi e finestre calcolate.';
 });
+
+
+// LROC quality report: visualizzazione diagnostica del report JSON.
+async function loadLrocQuality() {
+  const status = document.getElementById('lrocQualityStatus');
+  const setText = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = value;
+  };
+  const number = value => Number(value || 0).toLocaleString('it-IT');
+  const area = value => `${Number(value || 0).toFixed(6)} km²`;
+
+  try {
+    const response = await fetch('/api/terrain/lroc-quality', {
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-store'
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+
+    const counts = data.pixel_counts || {};
+    const areas = data.area_km2 || {};
+    const total = Number(data.valid_dtm_pixels || 0);
+    const classes = [
+      ['PRIMARY', 'lrocPrimary', 'lrocPrimaryArea', 'lrocBarPrimary'],
+      ['INTERPOLATED', 'lrocInterpolated', 'lrocInterpolatedArea', 'lrocBarInterpolated'],
+      ['UNRESOLVED', 'lrocUnresolved', 'lrocUnresolvedArea', 'lrocBarUnresolved'],
+      ['INVALID', 'lrocInvalid', 'lrocInvalidArea', 'lrocBarInvalid']
+    ];
+
+    for (const [key, countId, areaId, barId] of classes) {
+      const count = Number(counts[key] || 0);
+      setText(countId, number(count));
+      setText(areaId, area(areas[key]));
+      const bar = document.getElementById(barId);
+      if (bar) bar.style.width = `${Number(data.total_pixels) > 0
+        ? count / Number(data.total_pixels) * 100 : 0}%`;
+    }
+
+    setText('lrocCoverage',
+      `Pixel DTM validi: ${number(total)} / ${number(data.total_pixels)} · ` +
+      `Codici CONF non risolti: ${(data.unresolved_confidence_codes_on_valid_dtm || []).join(', ') || 'nessuno'}`);
+
+    const warningList = document.getElementById('lrocWarnings');
+    if (warningList) {
+      warningList.replaceChildren();
+      for (const warning of (data.warnings || [])) {
+        const item = document.createElement('li');
+        item.textContent = warning;
+        warningList.appendChild(item);
+      }
+    }
+
+    if (status) status.textContent = 'REPORT LOADED';
+  } catch (error) {
+    if (status) status.textContent = 'REPORT UNAVAILABLE';
+    setText('lrocCoverage', `Impossibile caricare il report LROC: ${error.message}`);
+    const warningList = document.getElementById('lrocWarnings');
+    if (warningList) {
+      warningList.replaceChildren();
+      const item = document.createElement('li');
+      item.textContent = 'Verificare che il report JSON sia presente e che il server web sia attivo.';
+      warningList.appendChild(item);
+    }
+  }
+}
+
+loadLrocQuality();

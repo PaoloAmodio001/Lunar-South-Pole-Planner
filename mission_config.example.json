@@ -45,11 +45,13 @@
     "max_roughness_m": 5.0,
     "min_valid_fraction": 0.95,
     "top_n": 20,
-    "report_name": "site_ranking.json"
+    "report_name": "site_ranking.json",
+    "lola_density_path": "data/terrain/official-lola/Site04_final_adj_5mpp_ldec.tif",
+    "lola_error_path": "data/terrain/official-lola/Site04_final_adj_5mpp_toterr.tif"
   },
   "astronomy": {
     "enabled": false,
-    "site": "Connecting Ridge",
+    "site": "Shackleton",
     "hours": 48,
     "step": "1h",
     "targets": [
@@ -61,11 +63,12 @@
   "illumination": {
     "enabled": false,
     "horizon_json": "reports/mission/horizon_profile.json",
-    "report_name": "solar_illumination_diagnostic.json"
+    "report_name": "solar_illumination_diagnostic.json",
+    "grid_azimuth_offset_deg": "from_horizon_profile"
   },
   "local_site_analysis": {
     "enabled": false,
-    "site_name": "Connecting Ridge",
+    "site_name": "Shackleton",
     "dem_path": "data/terrain/official-lola/Site04_final_adj_5mpp_surf.tif",
     "observer_x_m": null,
     "observer_y_m": null,
@@ -88,8 +91,8 @@
   "horizon_analysis": {
     "enabled": false,
     "dem_path": "data/terrain/official-lola/Site04_final_adj_5mpp_surf.tif",
-    "observer_row": null,
-    "observer_col": null,
+    "observer_row": 1600,
+    "observer_col": 1599,
     "observer_height_m": 1.0,
     "azimuth_step_deg": 2.0,
     "max_distance_m": 5000.0,
@@ -98,12 +101,12 @@
   "visibility_analysis": {
     "enabled": false,
     "horizon_json": "reports/mission/horizon_profile.json",
-    "grid_azimuth_offset_deg": null,
+    "grid_azimuth_offset_deg": "from_horizon_profile",
     "report_name": "astronomical_visibility_diagnostic.json"
   },
   "mission_report": {
     "enabled": true,
-    "site_name": "Connecting Ridge",
+    "site_name": "Shackleton",
     "planning_date": "2026-10-25",
     "horizon_hours": 48
   },
@@ -120,8 +123,8 @@
   "lunar_geometry": {
     "enabled": false,
     "dem_path": "data/terrain/official-lola/Site04_final_adj_5mpp_surf.tif",
-    "longitude_east_deg": null,
-    "latitude_deg": null,
+    "longitude_east_deg": -171.87,
+    "latitude_deg": -89.7668,
     "report_name": "lunar_geometry_diagnostic.json"
   },
   "descent_risk_map": {

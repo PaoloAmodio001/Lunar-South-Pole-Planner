@@ -64,6 +64,23 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/terrain/lroc-quality":
+            report_path = PROJECT_ROOT / "audit-reports" / "lroc-quality-mask-20261114T181357Z.json"
+            try:
+                with report_path.open("r", encoding="utf-8") as stream:
+                    payload = json.load(stream)
+                return self.send_json(200, payload)
+            except FileNotFoundError:
+                return self.send_json(404, {
+                    "status": "error",
+                    "error": "Report qualità LROC non trovato."
+                })
+            except (OSError, json.JSONDecodeError) as exc:
+                return self.send_json(500, {
+                    "status": "error",
+                    "error": f"Lettura report LROC non riuscita: {exc}"
+                })
+
         if parsed.path != "/api/ephemerides":
             return super().do_GET()
 

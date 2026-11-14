@@ -29,7 +29,15 @@ from src.local_site_analysis import analyze_local_site
 from src.confidence_validation import validate_confidence_raster
 from src.data_quality import audit_raster, compare_grid_metadata
 from src.site_assessment import assess_candidate, write_assessment
-from src.lunar_geometry import locate_observer, sample_elevation
+from src.lunar_geometry import (
+    AzimuthOrientationError,
+    SiteIdentityError,
+    geographic_to_grid_azimuth,
+    grid_azimuth_offset,
+    locate_observer,
+    sample_elevation,
+    validate_site_in_raster,
+)
 from src.mission_report import build_mission_report, write_mission_report
 
 
@@ -168,8 +176,186 @@ def _diagnose_temporal_continuity(sun_rows, earth_rows, expected_step_seconds):
     }
 
 
+# Sezioni che usano raster di terreno: (eseguita solo se enabled, chiavi raster).
+_TERRAIN_RASTER_SECTIONS = {
+    "site_selection": (False, ("dem_path",)),
+    "rover_path": (False, ("dem_path",)),
+    "descent_hazard_detection": (False, ("dem_path",)),
+    "lola_lroc_quality": (False, ("lola_path", "lroc_path")),
+    "local_site_analysis": (True, ("dem_path",)),
+    "horizon_analysis": (True, ("dem_path",)),
+    "site_assessment": (True, ("dem_path",)),
+    "lunar_geometry": (True, ("dem_path",)),
+    "data_quality": (True, ("dem_path", "comparison_path")),
+}
+
+DEFAULT_ASTRONOMY_SITE = "Connecting Ridge"
+
+# Valore di configurazione che ricava l'offset azimutale dal profilo
+# d'orizzonte (posizione dell'osservatore + CRS): unica fonte del valore.
+OFFSET_FROM_HORIZON_PROFILE = "from_horizon_profile"
+_OFFSET_TOLERANCE_DEG = 1e-3
+
+
+def _resolve_grid_azimuth_offset(section: str, section_cfg: dict,
+                                 horizon_payload: dict) -> dict:
+    """Restituisce l'offset geografico→griglia per illumination/visibility.
+
+    - "from_horizon_profile": calcolato dal CRS e dall'osservatore del profilo.
+    - valore numerico: accettato; se il CRS del profilo consente il calcolo,
+      deve coincidere con quello calcolato (tolleranza 1e-3°), altrimenti
+      resta marcato come non verificato.
+    """
+    key = f"{section}.grid_azimuth_offset_deg"
+    value = section_cfg.get("grid_azimuth_offset_deg")
+    if value is None:
+        raise ValueError(
+            f"Configurare {key} (\"{OFFSET_FROM_HORIZON_PROFILE}\" oppure un "
+            "valore numerico); l'orientamento non viene assunto."
+        )
+
+    observer = horizon_payload.get("observer") or {}
+    computed = None
+    computed_error = None
+    try:
+        computed = grid_azimuth_offset(
+            horizon_payload.get("crs_wkt"),
+            float(observer["x_map_units"]),
+            float(observer["y_map_units"]),
+        )
+    except (AzimuthOrientationError, KeyError, TypeError, ValueError) as exc:
+        computed_error = f"{type(exc).__name__}: {exc}"
+
+    if value == OFFSET_FROM_HORIZON_PROFILE:
+        if computed is None:
+            raise AzimuthOrientationError(
+                f"{key}: impossibile ricavare l'offset dal profilo "
+                f"d'orizzonte ({computed_error})."
+            )
+        return {**computed, "source": "horizon_profile_crs",
+                "derived_from_crs": True}
+
+    offset = _finite(value, key)
+    if computed is not None:
+        delta = (offset - computed["offset_deg"] + 180.0) % 360.0 - 180.0
+        if abs(delta) > _OFFSET_TOLERANCE_DEG:
+            raise AzimuthOrientationError(
+                f"{key}={offset} incoerente con l'offset ricavato dal CRS "
+                f"({computed['offset_deg']:.6f}°, differenza {delta:.6f}°)."
+            )
+        return {**computed, "offset_deg": offset,
+                "source": "configured_checked_against_crs",
+                "derived_from_crs": True}
+    return {
+        "offset_deg": offset,
+        "convention": "grid_azimuth = (geographic_azimuth + offset) mod 360",
+        "source": "configured_unverified",
+        "derived_from_crs": False,
+        "verification_unavailable_reason": computed_error,
+    }
+
+
+def _canonical_site(name):
+    """Nome canonico in SITES (confronto senza maiuscole/spazi) o None."""
+    if not isinstance(name, str):
+        return None
+    key = " ".join(name.split()).casefold()
+    for site in SITES:
+        if site.casefold() == key:
+            return site
+    return None
+
+
+def validate_mission_site_identity(config: dict) -> dict:
+    """Verifica preventiva della coerenza tra siti dichiarati e raster attivi.
+
+    Eseguita prima di qualsiasi step (e quindi prima delle query
+    astronomiche). Solleva SiteIdentityError se:
+    - i siti dichiarati (astronomy.site, mission_report.site_name,
+      local_site_analysis.site_name) indicano siti noti diversi;
+    - l'astronomia è attiva insieme a raster di terreno ma il sito non ha
+      coordinate note;
+    - le coordinate di un sito dichiarato non ricadono in ogni raster attivo
+      o la trasformazione non è verificabile.
+    Le etichette libere non riconducibili a SITES non vengono geolocalizzate.
+    """
+    rasters = []
+    for section, (needs_enabled, keys) in _TERRAIN_RASTER_SECTIONS.items():
+        cfg = config.get(section)
+        if not isinstance(cfg, dict):
+            continue
+        if needs_enabled and not cfg.get("enabled", False):
+            continue
+        for key in keys:
+            value = cfg.get(key)
+            if value:
+                rasters.append((f"{section}.{key}", str(value)))
+
+    declared = []  # (sorgente, etichetta, nome canonico o None)
+    astronomy_cfg = config.get("astronomy")
+    astronomy_enabled = (isinstance(astronomy_cfg, dict)
+                         and astronomy_cfg.get("enabled", False))
+    if astronomy_enabled:
+        label = astronomy_cfg.get("site", DEFAULT_ASTRONOMY_SITE)
+        declared.append(("astronomy.site", label, _canonical_site(label)))
+    report_cfg = config.get("mission_report", {})
+    if isinstance(report_cfg, dict) and report_cfg.get("enabled", True) \
+            and "site_name" in report_cfg:
+        label = report_cfg["site_name"]
+        declared.append(("mission_report.site_name", label, _canonical_site(label)))
+    local_cfg = config.get("local_site_analysis")
+    if isinstance(local_cfg, dict) and local_cfg.get("enabled", False) \
+            and "site_name" in local_cfg:
+        label = local_cfg["site_name"]
+        declared.append(("local_site_analysis.site_name", label,
+                         _canonical_site(label)))
+
+    known = {canonical for _, _, canonical in declared if canonical}
+    if len(known) > 1:
+        detail = ", ".join(f"{src}={label!r}" for src, label, c in declared if c)
+        raise SiteIdentityError(
+            f"Siti dichiarati incoerenti nella configurazione: {detail}."
+        )
+    if astronomy_enabled and rasters and declared[0][2] is None:
+        raise SiteIdentityError(
+            f"astronomy.site={declared[0][1]!r} non ha coordinate note "
+            f"(siti disponibili: {', '.join(SITES)}); impossibile verificarne "
+            "la compatibilità con i raster di terreno configurati."
+        )
+
+    site = next(iter(known), None)
+    summary = {
+        "status": "not_applicable",
+        "site": site,
+        "declared": [
+            {"source": src, "label": label, "recognized_site": c}
+            for src, label, c in declared
+        ],
+        "rasters_checked": [],
+    }
+    if site is None or not rasters:
+        summary["reason"] = (
+            "Nessun sito noto dichiarato." if site is None
+            else "Nessun raster di terreno attivo da confrontare."
+        )
+        return summary
+
+    latitude, longitude = SITES[site]
+    for source, raster in rasters:
+        try:
+            check = validate_site_in_raster(site, latitude, longitude, raster)
+        except SiteIdentityError as exc:
+            raise SiteIdentityError(f"[{source}] {exc}") from exc
+        summary["rasters_checked"].append({"source": source, **check})
+    summary["status"] = "validated"
+    summary["coordinates_source"] = "src.astronomy.SITES (lat, lon est)"
+    return summary
+
+
 def run_mission_workflow(config_path):
     config = _read_json(config_path)
+    # Controllo geografico preventivo: interrompe prima di ogni step.
+    site_identity = validate_mission_site_identity(config)
     output_dir = Path(config.get("output_dir", "reports/mission"))
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -180,6 +366,7 @@ def run_mission_workflow(config_path):
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "status": "completed_with_warnings",
         "configuration": str(Path(config_path)),
+        "site_identity": site_identity,
         "steps": {},
         "artifacts": {},
         "warnings": [
@@ -206,7 +393,7 @@ def run_mission_workflow(config_path):
     astronomy_cfg = config.get("astronomy")
     if astronomy_cfg is not None and astronomy_cfg.get("enabled", False):
         def collect_astronomy():
-            site_name = astronomy_cfg.get("site", "Connecting Ridge")
+            site_name = astronomy_cfg.get("site", DEFAULT_ASTRONOMY_SITE)
             if site_name not in SITES:
                 raise ValueError(
                     f"Sito astronomico non riconosciuto: {site_name}. "
@@ -455,11 +642,15 @@ def run_mission_workflow(config_path):
                     "horizon_analysis con observer_row/observer_col validi "
                     "oppure configurare illumination.horizon_json."
                 )
-            if "grid_azimuth_offset_deg" not in illumination_cfg:
-                raise ValueError(
-                    "Configurare esplicitamente grid_azimuth_offset_deg; "
-                    "l'orientamento non viene dedotto automaticamente."
+            horizon_path = Path(horizon_json)
+            if not horizon_path.is_file():
+                raise FileNotFoundError(
+                    f"Profilo orizzonte non trovato: {horizon_path}"
                 )
+            orientation = _resolve_grid_azimuth_offset(
+                "illumination", illumination_cfg,
+                json.loads(horizon_path.read_text(encoding="utf-8")),
+            )
 
             astronomy_result = report["steps"].get("astronomy", {})
             astronomy_data = astronomy_result.get("result", {})
@@ -491,10 +682,9 @@ def run_mission_workflow(config_path):
             result_path = estimate_direct_solar_visibility(
                 horizon_json=horizon_json,
                 solar_observations=solar_rows,
-                grid_azimuth_offset_deg=float(
-                    illumination_cfg["grid_azimuth_offset_deg"]
-                ),
+                grid_azimuth_offset_deg=orientation["offset_deg"],
                 output_path=artifact,
+                azimuth_mapping_details=orientation,
             )
             report["artifacts"]["illumination"] = str(result_path)
             return {
@@ -503,6 +693,8 @@ def run_mission_workflow(config_path):
                 "report_file": str(result_path),
                 "horizon_profile_source": horizon_source,
                 "horizon_profile_file": str(horizon_json),
+                "azimuth_offset_deg": orientation["offset_deg"],
+                "azimuth_offset_source": orientation["source"],
                 "azimuth_offset_independently_validated": False,
             }
 
@@ -515,10 +707,6 @@ def run_mission_workflow(config_path):
                 raise ValueError(
                     "Specificare visibility_analysis.grid_azimuth_offset_deg."
                 )
-            offset = _finite(
-                visibility_cfg["grid_azimuth_offset_deg"],
-                "visibility_analysis.grid_azimuth_offset_deg",
-            )
 
             horizon_step = report["steps"].get("horizon_analysis", {})
             horizon_result = horizon_step.get("result", {})
@@ -532,6 +720,10 @@ def run_mission_workflow(config_path):
             if not horizon_path.is_file():
                 raise FileNotFoundError(f"Profilo orizzonte non trovato: {horizon_path}")
             horizon = json.loads(horizon_path.read_text(encoding="utf-8"))
+            orientation = _resolve_grid_azimuth_offset(
+                "visibility_analysis", visibility_cfg, horizon
+            )
+            offset = orientation["offset_deg"]
             samples = horizon.get("samples", [])
             horizon_az = [s.get("grid_azimuth_deg") for s in samples]
             horizon_el = [s.get("horizon_elevation_deg") for s in samples]
@@ -565,7 +757,7 @@ def run_mission_workflow(config_path):
                         })
                         continue
 
-                    grid_az = (az + offset) % 360.0
+                    grid_az = geographic_to_grid_azimuth(az, offset)
                     result = compare_with_horizon(
                         azimuth_deg=grid_az,
                         elevation_deg=el,
@@ -604,9 +796,11 @@ def run_mission_workflow(config_path):
                 "horizon_profile": str(horizon_path),
                 "astronomy_report": str(astronomy_path),
                 "azimuth_mapping": {
+                    **orientation,
                     "convention": "grid_azimuth=(Horizons azimuth + offset) mod 360",
                     "offset_deg": offset,
                     "independently_validated": False,
+                    "horizons_frame_equivalence_verified": False,
                 },
                 "georeference_validated": False,
                 "observation_count": len(results),
@@ -993,6 +1187,8 @@ def run_mission_workflow(config_path):
                 max_roughness_m=selection_cfg.get("max_roughness_m", 5.0),
                 min_valid_fraction=selection_cfg.get("min_valid_fraction", 0.95),
                 top_n=selection_cfg.get("top_n", 20),
+                lola_density_path=selection_cfg.get("lola_density_path"),
+                lola_error_path=selection_cfg.get("lola_error_path"),
             )
             report["artifacts"]["site_selection"] = result["output_path"]
 
