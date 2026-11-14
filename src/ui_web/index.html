@@ -97,6 +97,8 @@ canvas.chart{height:78px}
 .mission-pre{max-height:220px;overflow:auto;font-size:9px;background:#0a1520;border:1px solid #192838;border-radius:4px;padding:8px;white-space:pre-wrap;overflow-wrap:anywhere}
 .mission-details{margin-top:6px;font-size:10px}.mission-details summary{cursor:pointer;color:#9aafc2}
 .mission-table-wrap{max-height:240px}
+.sci-tools{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.sci-tools button{font-size:10px;padding:6px 9px}
+.sci-tools button[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}
 #missionEngineSection .action{margin-right:6px}
 .engineering-section{margin:14px 12px;padding:13px;border:1px solid #263b50;border-radius:8px;background:rgba(10,22,36,.72)}
 .engineering-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}
@@ -539,6 +541,67 @@ body.profile-home #changeProfile {display:none}
      <div class="window-notice">Esecuzione del vero orchestratore (src/mission_orchestrator.py). Risultati preliminari: non certificano la sicurezza di atterraggio.</div>
     </section>
 
+    <section class="engineering-section" id="scienceSection">
+     <div class="windows-heading">
+      <span>SCIENCE TOOLS · MODULI SCIENTIFICI</span>
+      <span class="tag" id="sciState">PRONTO</span>
+     </div>
+     <div class="sci-tools" role="group" aria-label="Strumento scientifico">
+      <button type="button" data-sci-tool="dem-audit">AUDIT DEM</button>
+      <button type="button" data-sci-tool="terrain">TERRENO LOCALE</button>
+      <button type="button" data-sci-tool="horizon">ORIZZONTE</button>
+      <button type="button" data-sci-tool="rover-plan">PERCORSO ROVER</button>
+      <button type="button" data-sci-tool="site-comparison">CONFRONTO SITI</button>
+     </div>
+     <div class="engineering-grid" id="sciRasterRow">
+      <label>Raster (catalogo locale)<select id="sciRaster"></select></label>
+     </div>
+     <div data-sci-pane="dem-audit" class="window-notice">Audit di metadati e quote del raster selezionato (data_quality.audit_raster).</div>
+     <div data-sci-pane="terrain" class="engineering-grid" hidden>
+      <label>Riga<input id="sciTRow" type="number" value="1600" min="0" step="1"></label>
+      <label>Colonna<input id="sciTCol" type="number" value="1599" min="0" step="1"></label>
+      <label>Raggio (px)<input id="sciTRadius" type="number" value="10" min="1" max="250" step="1"></label>
+     </div>
+     <div data-sci-pane="horizon" class="engineering-grid" hidden>
+      <label>Riga osservatore<input id="sciHRow" type="number" value="1600" min="0" step="1"></label>
+      <label>Colonna osservatore<input id="sciHCol" type="number" value="1599" min="0" step="1"></label>
+      <label>Altezza sul DEM (m)<input id="sciHHeight" type="number" value="1" min="0" max="100" step="any"></label>
+      <label>Passo azimut (°)<input id="sciHStep" type="number" value="2" min="0.5" max="45" step="any"></label>
+      <label>Distanza max (m)<input id="sciHDist" type="number" value="5000" min="1" max="20000" step="any"></label>
+     </div>
+     <div data-sci-pane="rover-plan" hidden>
+      <div class="engineering-grid">
+       <label>Partenza riga<input id="sciRSr" type="number" value="120" min="0" step="1"></label>
+       <label>Partenza colonna<input id="sciRSc" type="number" value="113" min="0" step="1"></label>
+       <label>Arrivo riga<input id="sciRGr" type="number" value="100" min="0" step="1"></label>
+       <label>Arrivo colonna<input id="sciRGc" type="number" value="100" min="0" step="1"></label>
+       <label>Pendenza max (°)<input id="sciRSlope" type="number" value="20" min="0.1" max="89" step="any"></label>
+       <label>Consumo (Wh/m)<input id="sciREpm" type="number" value="0.02" min="0" step="any"></label>
+       <label>Budget energia (Wh, vuoto = nessuno)<input id="sciRBudget" type="number" min="0" step="any"></label>
+      </div>
+      <label class="window-notice"><input id="sciREnergy" type="checkbox"> Stima energetica dettagliata (rover_energy): richiede parametri reali del rover, nessun valore predefinito</label>
+      <div class="engineering-grid">
+       <label>Massa (kg)<input id="sciEMass" type="number" min="0" step="any"></label>
+       <label>Coeff. rotolamento<input id="sciECrr" type="number" min="0" step="any"></label>
+       <label>Efficienza trasmissione (0-1]<input id="sciEEff" type="number" min="0" max="1" step="any"></label>
+       <label>Potenza ausiliaria (W)<input id="sciEAux" type="number" min="0" step="any"></label>
+       <label>Durata missione (h)<input id="sciEHours" type="number" min="0" step="any"></label>
+       <label>Capacità batteria (Wh)<input id="sciEBatt" type="number" min="0" step="any"></label>
+       <label>Riserva (%)<input id="sciEReserve" type="number" value="20" min="0" max="100" step="any"></label>
+      </div>
+     </div>
+     <div data-sci-pane="site-comparison" hidden>
+      <div class="engineering-grid">
+       <label>Data inizio (UTC)<input id="sciCDate" type="date"></label>
+       <label>Durata (ore, 1-168)<input id="sciCHours" type="number" value="48" min="1" max="168" step="1"></label>
+      </div>
+      <div class="window-notice">Richiede la rete (NASA/JPL Horizons): non disponibile offline.</div>
+     </div>
+     <button id="sciRun" class="action">RUN ANALYSIS</button>
+     <div id="sciResult"><div class="engineering-result">Seleziona uno strumento e avvia l'analisi.</div></div>
+     <div class="window-notice">Ogni risultato proviene dal modulo scientifico originale indicato; coordinate di griglia DEM, frame geodetico non validato.</div>
+    </section>
+
     <section class="lroc-quality-section" id="lrocQualitySection">
      <div class="windows-heading">
       <span>LROC TERRAIN QUALITY · DTM CONFIDENCE</span>
@@ -658,6 +721,7 @@ body.profile-home #changeProfile {display:none}
 </script>
 <script type="module" src="/main.js"></script>
 <script src="/mission.js" defer></script>
+<script src="/science.js" defer></script>
 
 <script>
 (() => {

@@ -37,6 +37,7 @@ from src.communications import calculate_link_budget
 from src.thermal_model import simulate_single_node_thermal
 from src.ui_web import mission_runner
 from src.ui_web.mission_runner import ConfigError, MissionBusyError
+from src.ui_web import science_api
 
 MISSIONS = mission_runner.MissionManager()
 MISSION_RUN_RE = re.compile(
@@ -66,6 +67,7 @@ STATIC_ROUTES = {
     "/index.html": UI_DIR / "index.html",
     "/main.js": UI_DIR / "main.js",
     "/mission.js": UI_DIR / "mission.js",
+    "/science.js": UI_DIR / "science.js",
     "/data/terrain/global/Moon_NASA_LRO_8k_Topo_Small.glb":
         PROJECT_ROOT / "data" / "terrain" / "global" / "Moon_NASA_LRO_8k_Topo_Small.glb",
 }
@@ -286,8 +288,31 @@ class Handler(BaseHTTPRequestHandler):
         return self.send_json(200, {"status": "ok", "running_id": MISSIONS.running_id,
                                     "run": payload})
 
+    def handle_science_post(self, path):
+        """F4: endpoint sottili sui moduli scientifici (vedi science_api)."""
+        try:
+            payload = self.read_json_body(limit=64 * 1024)
+            result = science_api.POST_ROUTES[path](payload)
+            return self.send_json(200, {"status": "ok", **result})
+        except science_api.ScienceNotFound as exc:
+            return self.send_json(404, {"status": "error", "error": str(exc)})
+        except science_api.ScienceBusy as exc:
+            return self.send_json(503, {"status": "error", "error": str(exc)})
+        except science_api.ScienceUpstreamError as exc:
+            return self.send_json(502, {"status": "error", "error": str(exc)})
+        except (ValueError, TypeError, KeyError, IndexError, json.JSONDecodeError) as exc:
+            # include ScienceInputError e le validazioni dei moduli originali
+            return self.send_json(400, {"status": "error", "error": str(exc)})
+        except FileNotFoundError as exc:
+            return self.send_json(404, {"status": "error", "error": str(exc)})
+        except Exception as exc:
+            return self.send_json(500, {"status": "error",
+                                        "error": f"Calcolo non riuscito: {type(exc).__name__}"})
+
     def do_POST(self):
         parsed = urlparse(self.path)
+        if parsed.path in science_api.POST_ROUTES:
+            return self.handle_science_post(parsed.path)
         if parsed.path in ("/api/mission/validate", "/api/mission/runs"):
             return self.handle_mission_post(parsed.path)
         if parsed.path == "/api/mission/run":  # alias F3 di /api/mission/runs
@@ -315,6 +340,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/science/rasters":
+            return self.send_json(200, {"status": "ok", **science_api.list_rasters()})
         if parsed.path == "/api/sites":
             return self.send_json(200, {"status": "ok", "source": "src.astronomy.SITES", "sites": [
                 {"name": name, "latitude_deg": lat, "longitude_east_deg": lon}
