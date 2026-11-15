@@ -1,0 +1,21 @@
+{
+  "status": "completed_with_errors",
+  "steps": {
+    "site_selection": {
+      "status": "failed",
+      "error_type": "FileNotFoundError",
+      "error": "Raster TOTERR non trovato: data/terrain/official-lola/NONEXISTENT_toterr.tif"
+    }
+  },
+  "artifacts": {
+    "mission_status_json": "<scratchpad>/e2e/out_fail/mission_status_report.json",
+    "mission_status_markdown": "<scratchpad>/e2e/out_fail/mission_status_report.md"
+  },
+  "report_path": "<scratchpad>/e2e/out_fail/mission_report.json",
+  "warnings": [
+    "Risultati preliminari, non certificati per operazioni reali.",
+    "Georeferenziazione e frame fisico lunare non validati indipendentemente.",
+    "L'allocazione multi-rover usa distanze euclidee, non percorsi DEM.",
+    "Il journal è locale e non si connette a nodi P-System remoti."
+  ]
+}

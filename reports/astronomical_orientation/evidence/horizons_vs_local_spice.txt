@@ -1,0 +1,8 @@
+== sun: 61 campioni, azimut Horizons 5.6..359.5°, copertura circolare completa
+   vs MOON_ME_DE421  |Δaz| max 0.00000°  mediana 0.00000°   |Δel| max 0.00001°
+   vs MOON_PA_DE421  |Δaz| max 0.01947°  mediana 0.01887°   |Δel| max 0.02180°
+   ipotesi antioraria |Δ| max 178.16°, ipotesi da sud |Δ| max 180.00°
+== earth: 61 campioni, azimut Horizons 164.6..178.5°, copertura circolare parziale
+   vs MOON_ME_DE421  |Δaz| max 0.00001°  mediana 0.00000°   |Δel| max 0.00001°
+   vs MOON_PA_DE421  |Δaz| max 0.01896°  mediana 0.01883°   |Δel| max 0.02181°
+   ipotesi antioraria |Δ| max 30.73°, ipotesi da sud |Δ| max 180.00°

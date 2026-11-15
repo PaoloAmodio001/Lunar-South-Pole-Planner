@@ -1,0 +1,206 @@
+{
+  "schema": "lola-lroc-quality-report/2.0",
+  "method": {
+    "target_grid": "LOLA",
+    "lroc_dem_resampling": "bilinear",
+    "confidence_resampling": "nearest",
+    "difference_definition": "LROC minus LOLA, metres",
+    "comparison_groups": {
+      "primary": "CONF 14",
+      "interpolated": "CONF 4",
+      "unresolved": "CONF classes not documented",
+      "excluded": [
+        "CONF 0",
+        "CONF 1",
+        "outside confidence coverage"
+      ]
+    }
+  },
+  "sources": {
+    "lola_dem": "data/terrain/official-lola/Site04_final_adj_5mpp_surf.tif",
+    "lroc_dem": "data/terrain/reference-lroc/NAC_DTM_ESALL_SR12.TIF",
+    "lroc_original_confidence": "data/terrain/reference-lroc/source-check/NAC_DTM_ESALL_SR12_CONF_original.IMG"
+  },
+  "coverage": {
+    "lola_valid_pixels": 10240000,
+    "lroc_valid_pixels_on_lola_grid": 690057,
+    "dem_overlap_pixels": 690057,
+    "confidence_covered_pixels_on_dem_overlap": 690057,
+    "outside_confidence_coverage_pixels_on_dem_overlap": 0,
+    "valid_comparison_pixels": 689709
+  },
+  "confidence_class_counts_on_overlap": {
+    "0": 119,
+    "1": 95,
+    "2": 41,
+    "4": 20800,
+    "5": 43,
+    "6": 50,
+    "14": 668909
+  },
+  "by_confidence_class": {
+    "0": {
+      "description": "NoData / fuori dal perimetro valido",
+      "included_in_elevation_statistics": false,
+      "pixel_count": 119,
+      "median_difference_m": 0.9561767578125,
+      "mean_difference_m": 23.082347709591648,
+      "mae_m": 23.150967638031776,
+      "rmse_m": 97.8809839295858,
+      "p95_absolute_difference_m": 47.3219116210913,
+      "max_absolute_difference_m": 437.02197265625,
+      "absolute_difference_over_10m": 6,
+      "absolute_difference_over_50m": 6,
+      "absolute_difference_over_100m": 6
+    },
+    "1": {
+      "description": "Ombra",
+      "included_in_elevation_statistics": false,
+      "pixel_count": 95,
+      "median_difference_m": 0.8482666015625,
+      "mean_difference_m": 64.87040051912007,
+      "mae_m": 65.06199051706415,
+      "rmse_m": 173.40085388951138,
+      "p95_absolute_difference_m": 468.7989196777344,
+      "max_absolute_difference_m": 477.157470703125,
+      "absolute_difference_over_10m": 13,
+      "absolute_difference_over_50m": 13,
+      "absolute_difference_over_100m": 13
+    },
+    "2": {
+      "description": "Classe non documentata: significato non attribuito",
+      "included_in_elevation_statistics": false,
+      "pixel_count": 41,
+      "median_difference_m": 0.815185546875,
+      "mean_difference_m": 1.1674998213605183,
+      "mae_m": 1.4062217154153964,
+      "rmse_m": 1.8200029800892543,
+      "p95_absolute_difference_m": 3.20941162109375,
+      "max_absolute_difference_m": 3.6790771484375,
+      "absolute_difference_over_10m": 0,
+      "absolute_difference_over_50m": 0,
+      "absolute_difference_over_100m": 0
+    },
+    "4": {
+      "description": "Interpolato o estrapolato",
+      "included_in_elevation_statistics": true,
+      "pixel_count": 20800,
+      "median_difference_m": 0.4246826171875,
+      "mean_difference_m": 0.08400802025428185,
+      "mae_m": 1.7400120427058294,
+      "rmse_m": 6.172469396638826,
+      "p95_absolute_difference_m": 4.199609375,
+      "max_absolute_difference_m": 192.2359619140625,
+      "absolute_difference_over_10m": 61,
+      "absolute_difference_over_50m": 48,
+      "absolute_difference_over_100m": 29
+    },
+    "5": {
+      "description": "Classe non documentata: significato non attribuito",
+      "included_in_elevation_statistics": false,
+      "pixel_count": 43,
+      "median_difference_m": 0.7340087890625,
+      "mean_difference_m": 1.013954340025436,
+      "mae_m": 1.1091890556867732,
+      "rmse_m": 1.4622891040976354,
+      "p95_absolute_difference_m": 2.761663818359375,
+      "max_absolute_difference_m": 3.7564697265625,
+      "absolute_difference_over_10m": 0,
+      "absolute_difference_over_50m": 0,
+      "absolute_difference_over_100m": 0
+    },
+    "6": {
+      "description": "Classe non documentata: significato non attribuito",
+      "included_in_elevation_statistics": false,
+      "pixel_count": 50,
+      "median_difference_m": 0.76129150390625,
+      "mean_difference_m": 0.966947021484375,
+      "mae_m": 1.061024169921875,
+      "rmse_m": 1.3117463569905419,
+      "p95_absolute_difference_m": 2.406097412109375,
+      "max_absolute_difference_m": 2.9237060546875,
+      "absolute_difference_over_10m": 0,
+      "absolute_difference_over_50m": 0,
+      "absolute_difference_over_100m": 0
+    },
+    "14": {
+      "description": "Basato sui risultati dell'image matching",
+      "included_in_elevation_statistics": true,
+      "pixel_count": 668909,
+      "median_difference_m": 0.7000732421875,
+      "mean_difference_m": 0.7588256792686977,
+      "mae_m": 0.9169067315838062,
+      "rmse_m": 1.1660009131738447,
+      "p95_absolute_difference_m": 2.28118896484375,
+      "max_absolute_difference_m": 18.6873779296875,
+      "absolute_difference_over_10m": 35,
+      "absolute_difference_over_50m": 0,
+      "absolute_difference_over_100m": 0
+    }
+  },
+  "comparison_groups": {
+    "primary_conf_14": {
+      "pixel_count": 668909,
+      "median_difference_m": 0.7000732421875,
+      "mean_difference_m": 0.7588256792686977,
+      "mae_m": 0.9169067315838062,
+      "rmse_m": 1.1660009131738447,
+      "p95_absolute_difference_m": 2.28118896484375,
+      "max_absolute_difference_m": 18.6873779296875,
+      "absolute_difference_over_10m": 35,
+      "absolute_difference_over_50m": 0,
+      "absolute_difference_over_100m": 0
+    },
+    "interpolated_conf_4": {
+      "pixel_count": 20800,
+      "median_difference_m": 0.4246826171875,
+      "mean_difference_m": 0.08400802025428185,
+      "mae_m": 1.7400120427058294,
+      "rmse_m": 6.172469396638826,
+      "p95_absolute_difference_m": 4.199609375,
+      "max_absolute_difference_m": 192.2359619140625,
+      "absolute_difference_over_10m": 61,
+      "absolute_difference_over_50m": 48,
+      "absolute_difference_over_100m": 29
+    },
+    "unresolved_classes": {
+      "pixel_count": 134,
+      "median_difference_m": 0.7703857421875,
+      "mean_difference_m": 1.043394629635028,
+      "mae_m": 1.1821002106168377,
+      "rmse_m": 1.530264866433788,
+      "p95_absolute_difference_m": 2.9148193359375,
+      "max_absolute_difference_m": 3.7564697265625,
+      "absolute_difference_over_10m": 0,
+      "absolute_difference_over_50m": 0,
+      "absolute_difference_over_100m": 0
+    }
+  },
+  "excluded_pixels": {
+    "confidence_0_nodata": 119,
+    "confidence_1_shadow": 95
+  },
+  "code_14_reference_comparison": {
+    "pixel_count": 668909,
+    "median_difference_m": 0.7000732421875,
+    "mean_difference_m": 0.7588256792686977,
+    "mae_m": 0.9169067315838062,
+    "rmse_m": 1.1660009131738447,
+    "p95_absolute_difference_m": 2.28118896484375,
+    "max_absolute_difference_m": 18.6873779296875,
+    "absolute_difference_over_10m": 35,
+    "absolute_difference_over_50m": 0,
+    "absolute_difference_over_100m": 0
+  },
+  "warnings": [
+    "Confronto diagnostico, non validazione geodetica.",
+    "CONF 14 indica image matching riuscito, non accuratezza assoluta certificata.",
+    "CONF 4 è analizzata separatamente perché interpolata o estrapolata.",
+    "CONF 0 e CONF 1 sono escluse dalle statistiche altimetriche.",
+    "Le classi CONF non documentate restano irrisolte.",
+    "Le differenze non sono correzioni da applicare automaticamente alle quote.",
+    "La confidenza LROC non è una maschera di percorribilità del rover.",
+    "Il confronto non certifica frame fisico lunare o datum verticale equivalenti.",
+    "Il ricampionamento non dimostra la co-registrazione fisica dei prodotti."
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "status": "success",
+  "dtm_path": "data/terrain/reference-lroc/NAC_DTM_ESALL_SR12.TIF",
+  "confidence_path": "data/terrain/reference-lroc/source-check/NAC_DTM_ESALL_SR12_CONF_original.IMG",
+  "output_raster": "data/terrain/processed/lroc_quality/NAC_DTM_ESALL_SR12_QUALITY_20261114T181357Z.tif",
+  "grid": {
+    "width": 2500,
+    "height": 2500,
+    "crs": "PROJCS[\"PolarStereographic Moon\",GEOGCS[\"GCS_Moon\",DATUM[\"D_Moon\",SPHEROID[\"Moon_polarRadius\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "transform": [
+      2.0,
+      0.0,
+      -5141.0,
+      0.0,
+      -2.0,
+      -4859.0
+    ],
+    "pixel_area_m2": 4.0
+  },
+  "classification": {
+    "0": "INVALID: DTM invalid, CONF 0 or CONF 1",
+    "1": "PRIMARY: CONF 14 and valid DTM",
+    "2": "INTERPOLATED: CONF 4 and valid DTM",
+    "3": "UNRESOLVED: undocumented CONF and valid DTM",
+    "255": "NoData reserved value"
+  },
+  "pixel_counts": {
+    "INVALID": 1938337,
+    "PRIMARY": 4180749,
+    "INTERPOLATED": 130067,
+    "UNRESOLVED": 847
+  },
+  "area_km2": {
+    "INVALID": 7.753348,
+    "PRIMARY": 16.722996,
+    "INTERPOLATED": 0.520268,
+    "UNRESOLVED": 0.003388
+  },
+  "confidence_histogram": {
+    "0": 520525,
+    "1": 1417451,
+    "2": 611,
+    "4": 130067,
+    "5": 255,
+    "6": 341,
+    "12": 1,
+    "14": 4180749
+  },
+  "unresolved_confidence_codes_on_valid_dtm": [
+    2,
+    5,
+    6,
+    12
+  ],
+  "valid_dtm_pixels": 4313020,
+  "total_pixels": 6250000,
+  "warnings": [
+    "La classificazione non certifica l'accuratezza assoluta del DTM.",
+    "La coincidenza della griglia non dimostra la co-registrazione fisica.",
+    "Le classi CONF non documentate sono mantenute come UNRESOLVED.",
+    "La maschera è riferita esclusivamente alla griglia nativa LROC.",
+    "Non applicare direttamente questa maschera al DEM LOLA."
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "status": "completed_preliminary",
+  "steps": {
+    "descent_hazard_detection": {
+      "status": "success",
+      "result": {
+        "decision": "EVITARE",
+        "decision_reasons": [
+          "Pendenza 23.173° oltre soglia 15.000°.",
+          "Rugosità proxy 14.998 m oltre soglia 1.000 m."
+        ],
+        "coverage_fraction": 1.0,
+        "report_file": "<scratchpad>/e2e/out/descent_hazard_report.json",
+        "status": "preliminary"
+      }
+    },
+    "site_selection": {
+      "status": "success",
+      "result": {
+        "status": "preliminary",
+        "candidates_ranked": 20,
+        "terrain_class_summary": {
+          "counts": {
+            "EXCLUDED_BY_CONFIGURED_THRESHOLDS": 313,
+            "ELIGIBLE_NEAR_THRESHOLD": 38,
+            "ELIGIBLE_WITHIN_CONFIGURED_THRESHOLDS": 49
+          },
+          "interpretation": "Classificazione basata solo su pendenza, rugosità e copertura dei dati rispetto alle soglie configurate; non certifica la sicurezza del sito."
+        },
+        "top_candidate": {
+          "name": "candidate_r2872_c964",
+          "grid_row": 2872,
+          "grid_col": 964,
+          "map_x": -4177.5,
+          "map_y": -13362.5,
+          "terrain_metrics": {
+            "slope_p95_deg": 5.15079372607353,
+            "roughness_plane_residual_std_m": 0.657111310981842,
+            "valid_fraction": 1.0
+          },
+          "terrain_threshold_utilization_pct": {
+            "slope": 34.3386248404902,
+            "roughness": 13.14222621963684
+          },
+          "terrain_class": "ELIGIBLE_WITHIN_CONFIGURED_THRESHOLDS",
+          "eligible_by_terrain_thresholds": true,
+          "exclusion_reasons": [],
+          "lola_quality": {
+            "status": "available",
+            "window": {
+              "row_start": 2862,
+              "row_stop_exclusive": 2883,
+              "col_start": 954,
+              "col_stop_exclusive": 975,
+              "radius_pixels": 10,
+              "total_cells": 441
+            },
+            "ldec": {
+              "valid_cells": 441,
+              "valid_fraction": 1.0,
+              "counts_by_return_count": {
+                "0": 375,
+                "1": 62,
+                "2": 4,
+                "3": 0,
+                "4": 0,
+                "5": 0
+              },
+              "zero_return_fraction": 0.8503401360544217,
+              "positive_return_fraction": 0.14965986394557823
+            },
+            "toterr": {
+              "count": 441,
+              "median_m": 0.18145082890987396,
+              "p95_m": 0.33206766843795776,
+              "max_m": 0.5383946299552917,
+              "valid_fraction": 1.0
+            },
+            "interpretation": "LDEC descrive i ritorni laser per cella; TOTERR è l'incertezza RMS del prodotto. Nessuno dei due, da solo, certifica l'accuratezza assoluta della quota."
+          },
+          "score": {
+            "name": "candidate_r2872_c964",
+            "score_0_100": 74.14,
+            "coverage_fraction": 1.0,
+            "components_0_100": {
+              "slope": 65.66,
+              "roughness": 86.86
+            },
+            "missing_metrics": [
+              "illumination",
+              "communications",
+              "confidence"
+            ],
+            "notes": ""
+          },
+          "score_coverage_fraction": 1.0,
+          "missing_metrics": [
+            "illumination",
+            "communications",
+            "confidence"
+          ],
+          "score_scope": [
+            "slope",
+            "roughness"
+          ]
+        },
+        "report_file": "<scratchpad>/e2e/out/site_ranking.json",
+        "warnings": [
+          "Classifica preliminare: non certifica la sicurezza dell'atterraggio.",
+          "Il campionamento non analizza ogni pixel del DEM.",
+          "Il punteggio usa soltanto pendenza e rugosità.",
+          "Illuminazione, comunicazioni e confidenza non sono incluse nel punteggio.",
+          "LDEC e TOTERR, se disponibili, sono indicatori diagnostici separati e non modificano il punteggio.",
+          "Coordinate e CRS non attestano da soli un frame lunare fisicamente validato."
+        ]
+      }
+    },
+    "lola_lroc_quality": {
+      "status": "success",
+      "result": {
+        "output_path": "<scratchpad>/e2e/out/lola_lroc_quality.json",
+        "valid_overlap_pixels": 689709,
+        "code_14_mae_m": 0.9169067315838062,
+        "code_14_rmse_m": 1.1660009131738447,
+        "class_counts": {
+          "0": 119,
+          "1": 95,
+          "2": 41,
+          "4": 20800,
+          "5": 43,
+          "6": 50,
+          "14": 668909
+        }
+      }
+    },
+    "rover_path": {
+      "status": "success",
+      "result": {
+        "distance_m": 133.99494936611666,
+        "estimated_energy_wh": 2.6798989873223333,
+        "max_slope_deg": 19.799291107416934,
+        "cells_in_path": 22,
+        "cells_expanded": 558,
+        "plan_file": "<scratchpad>/e2e/out/rover_plan.json",
+        "status": "preliminary"
+      }
+    }
+  },
+  "artifacts": {
+    "descent_hazard_detection": "<scratchpad>/e2e/out/descent_hazard_report.json",
+    "site_selection": "<scratchpad>/e2e/out/site_ranking.json",
+    "lola_lroc_quality": "<scratchpad>/e2e/out/lola_lroc_quality.json",
+    "rover_plan": "<scratchpad>/e2e/out/rover_plan.json",
+    "route_quality": "<scratchpad>/e2e/out/route_quality.json",
+    "rover_route_map": "<scratchpad>/e2e/out/rover_route_map.png",
+    "mission_status_json": "<scratchpad>/e2e/out/mission_status_report.json",
+    "mission_status_markdown": "<scratchpad>/e2e/out/mission_status_report.md"
+  },
+  "report_path": "<scratchpad>/e2e/out/mission_report.json",
+  "warnings": [
+    "Risultati preliminari, non certificati per operazioni reali.",
+    "Georeferenziazione e frame fisico lunare non validati indipendentemente.",
+    "L'allocazione multi-rover usa distanze euclidee, non percorsi DEM.",
+    "Il journal è locale e non si connette a nodi P-System remoti."
+  ]
+}
