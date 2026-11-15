@@ -59,7 +59,3 @@ reports/psystem_local/
 # generated data/renders, fonts and an image whose provenance is not recorded).
 # Kept on disk; not part of the published repository or of the submission.
 video/
-# Presentation drafts at the repository root, kept locally pending an explicit
-# decision by the author (the official deck is in submission/)
-/LUNAR_P_SYSTEM_PRESENTATION.pdf
-/P-System Space Group*.pptx
