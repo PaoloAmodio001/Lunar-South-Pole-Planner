@@ -5,7 +5,9 @@
 
 Durante l'audit non ho modificato file del progetto e non ho eseguito `git add`, commit, push, test né avvio dell'applicazione. L'unico file creato è questo report.
 
-> **Premessa importante.** Su GitHub oggi c'è solo il commit `f056381`. Nulla di quanto descritto come "nuovo" o "modificato" è stato pubblicato. Questo audit valuta ciò che verrebbe pubblicato con `git add -A` + commit + push sullo stato attuale del disco. Finché non si fa il commit, il repository GitHub resta **INCOMPLETO** rispetto al progetto locale.
+> **Premessa.** I numeri e le classi A–F descrivono lo stato del disco **al momento dell'audit**, quando su GitHub c'era solo il commit `f056381`.
+>
+> **Aggiornamento (2026-11-15):** dopo l'audit l'autore ha autorizzato la pubblicazione. I file "nuovi" e "modificati" sono stati pubblicati con `ed112fe`; le due presentazioni della radice con `6a546c9`. Dettagli nella sezione [Registro della pubblicazione](#registro-della-pubblicazione).
 
 ---
 
@@ -32,7 +34,7 @@ Controllo: 295 + 76 + 22.225 = 22.596 ✔
 | Cache (`__pycache__`, `.pytest_cache`) | 116 | — | F |
 | `reports/web_runs/` (esecuzioni del Mission Engine dalla Web UI) | 65 | 4 MB | F, output per esecuzione |
 | `video/` (lavoro in corso) | 32 | 27 MB | D, vedi §6 |
-| Bozze di presentazione nella radice | 2 | 6,3 MB | D, vedi §6 |
+| Bozze di presentazione nella radice | 2 | 6,3 MB | D al momento dell'audit; **pubblicate dopo** (`6a546c9`) |
 | `np`, `rasterio` nella radice (screenshot ImageMagick salvati per errore) | 2 | 12 MB | F |
 
 ### Distribuzione per area
@@ -143,8 +145,8 @@ Nessun file in `data/` è ignorato o non tracciato. Il file più grande è di 77
 | Risorsa esclusa | Contenuto | Serve per eseguire? | Serve per riprodurre i risultati? | Raccomandazione |
 |---|---|---|---|---|
 | **`video/`** (32 file, 27 MB) | 6 script Blender (`common.py`, `s01_opening.py`, `prep_data.py`, …), `bl.sh` con percorso `/home/paolo/...` scritto nel codice, heightmap `.npy` e PNG generati, 4 fotogrammi di anteprima, 7 font Lato/FiraCode, `earth_nasa_visible_earth.jpg` | No | Solo per il video, che è una bozza (solo la scena 1) | **Tenere escluso** finché il video non è finito. Per pubblicarlo servono tre cose: rimuovere il percorso assoluto da `bl.sh`, documentare la fonte dell'immagine della Terra (NASA Visible Earth, oggi non registrata) e pubblicare solo gli script, perché i dati si rigenerano con `prep_data.py`. Non è un problema di dimensioni. |
-| **`LUNAR_P_SYSTEM_PRESENTATION.pdf`** (316 KB) | Documento tecnico "Lunar South Pole Planner & P-System" firmato dall'autore | No | No | **Decisione dell'autore.** È materiale originale e pertinente, quindi pubblicabile, per esempio in `docs/presentations/`. Va prima verificato che i dati citati siano coerenti con la submission. Contiene il nome dell'autore. |
-| **`P-System Space Group · with P-System technology (1).pptx`** (6,2 MB) | Bozza di presentazione; il "(1)" indica un download duplicato | No | No | **Decisione dell'autore.** La presentazione ufficiale è `submission/…NASA_2026.pptx`. Consiglio di tenerla esclusa oppure di pubblicarla con un nome pulito. |
+| **`LUNAR_P_SYSTEM_PRESENTATION.pdf`** (316 KB) | Documento tecnico "Lunar South Pole Planner & P-System" firmato dall'autore | No | No | **Pubblicato** su richiesta dell'autore (commit `6a546c9`), nella radice. Contiene il nome dell'autore. Non ho verificato che i dati citati siano coerenti con la submission. |
+| **`P-System Space Group · with P-System technology (1).pptx`** (6,2 MB) | Bozza di presentazione; il "(1)" indica un download duplicato | No | No | **Pubblicato** su richiesta dell'autore (commit `6a546c9`) con il nome originale. La presentazione ufficiale resta `submission/…NASA_2026.pptx`. Si può ancora rinominare per togliere il suffisso "(1)". |
 | `src/ui_web/node_modules/` (1.264 file) | three.js da npm | No: l'app usa `vendor/three/` (tracciato) | No | **Tenere escluso**. `package.json` è tracciato. |
 | `.venv/` | Ambiente Python | Sì, ma si rigenera con `requirements*.txt` | — | **Tenere escluso**, già documentato. |
 | `backups/` (3,2 GB), 147 copie `*.bak*`/`*.before-*` | Copie storiche, incluso il Site Explorer rimosso volontariamente | No | No | **Tenere escluso.** Il Site Explorer è stato rimosso su tua richiesta e non va ripubblicato. |
@@ -243,11 +245,11 @@ Da scaricare o installare a parte:
 
 ### Risultato: **COMPLETE** (per lo stato preparato sul disco)
 
-Tutto il materiale necessario per eseguire, verificare e valutare il Lunar South Pole Planner è incluso nei 295 file tracciati e nei 76 file nuovi, oppure è documentato. Nessun file importante è escluso solo per le dimensioni. Le uniche esclusioni di contenuto, `video/` e le due bozze di presentazione, non sono necessarie all'esecuzione e restano una tua decisione.
+Tutto il materiale necessario per eseguire, verificare e valutare il Lunar South Pole Planner è incluso nei 295 file tracciati e nei 76 file nuovi, oppure è documentato. Nessun file importante è escluso solo per le dimensioni. L'unica esclusione di contenuto rimasta è `video/`, che non serve all'esecuzione. Le due presentazioni sono state pubblicate dopo l'audit.
 
 **Condizioni del verdetto:**
 
-1. Vale **solo dopo** `git add -A` + commit + push. **Lo stato attuale di GitHub è INCOMPLETE**: mancano i 76 file nuovi e le 24 modifiche, tra cui auth, Educatori, `start.sh`, 7 moduli scientifici, `reports/validation/` e tutta la submission.
+1. Il verdetto valeva solo dopo `git add -A` + commit + push. **Condizione soddisfatta:** commit `ed112fe` pubblicato il 2026-11-15. Ora GitHub corrisponde al progetto locale, salvo i file esclusi da `.gitignore`.
 2. Lacune minori da valutare prima della pubblicazione, nessuna bloccante per la completezza del codice:
    - LICENSE;
    - screenshot;
@@ -256,3 +258,26 @@ Tutto il materiale necessario per eseguire, verificare e valutare il Lunar South
    - percorsi assoluti in `deck_print.html` e nei report di validazione.
 
 > Nota: se si esegue `git add -A`, questo file `REPOSITORY_COMPLETENESS_AUDIT.md` verrà pubblicato. Se non lo vuoi nel repository pubblico, spostalo o escludilo prima.
+
+---
+
+## Registro della pubblicazione
+
+Tutti i commit sono stati pubblicati su `origin/main` il 2026-11-15, su autorizzazione esplicita dell'autore.
+
+| Commit | Contenuto |
+|---|---|
+| `ed112fe` | 77 file aggiunti e 24 modificati: tutti i file "nuovi" e "modificati" di questo audit, più il file stesso. `.gitignore` rispettato: **non** sono stati pubblicati `.venv/`, `backups/`, `video/`, cache, copie `.bak` e chiavi. |
+| `6a546c9` | `LUNAR_P_SYSTEM_PRESENTATION.pdf`, `P-System Space Group · with P-System technology (1).pptx` e la relativa modifica a `.gitignore` |
+| questo commit | Aggiornamento di questo audit e di `REPOSITORY_UPDATE_REPORT.md` |
+
+**Esito aggiornato: COMPLETE**, ora anche su GitHub.
+
+**Restano aperti:**
+- LICENSE;
+- esecuzione dei test;
+- screenshot;
+- `video/`, ancora escluso;
+- `SCIENCE_STATUS.txt`, superato;
+- il nome del `.pptx`;
+- la fonte di P-System.

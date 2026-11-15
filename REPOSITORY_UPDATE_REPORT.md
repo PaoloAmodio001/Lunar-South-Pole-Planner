@@ -1,7 +1,7 @@
 # Repository Update Report — Lunar South Pole Planner
 
 Date: 2026-11-15 · Purpose: prepare the public repository for NASA Space Apps Challenge 2026 evaluation.
-**Nothing was committed, staged, pushed or published.**
+When the report was written, nothing had been committed, staged, pushed or published. **Update (2026-11-15):** the author later authorised publication. The commits are listed in [§12](#12-publication-record).
 
 ## 1. Initial state
 
@@ -30,7 +30,7 @@ Date: 2026-11-15 · Purpose: prepare the public repository for NASA Space Apps C
 | File | Change |
 |---|---|
 | `README.md` | Rewritten in English with the 18 required sections. Content comes from the code, `mission_config.example.json`, the stored validation reports and the audited `submission/` docs. The numbers quoted were re-checked against the JSON reports. |
-| `.gitignore` | Added: `*.key`, `*.pem`, `reports/psystem_local/` (the P-System local cluster writes private keys there); `*.db`, `*.sqlite*`; editor/OS files; `video/`; the two root presentation drafts. |
+| `.gitignore` | Added: `*.key`, `*.pem`, `reports/psystem_local/` (the P-System local cluster writes private keys there); `*.db`, `*.sqlite*`; editor/OS files; `video/`; the two root presentation drafts. The presentation rule was removed later, at the author's request (see §12). |
 | `requirements.txt` | Added `skyfield==1.55`. `src/local_ephemeris.py` imports it at run time (used by `contact_windows`, `terrain_cross_validation`, `ephemeris_validation` and `astronomy.source="local"`). Before this change it was listed only in the dev requirements. Same version as installed in `.venv`. |
 | `requirements-dev.txt` | `skyfield` line replaced by a comment, because it is now inherited from `requirements.txt`. |
 | `submission/TECHNICAL_ARCHITECTURE.md`, `submission/PROJECT_DETAILS.md` | Removed references to `documentation/REPORT_TEST.md`, which no longer exists in the repository (a copy is in the system Trash). Updated the skyfield dependency note. |
@@ -67,7 +67,7 @@ After the `.gitignore` update, `git add -A` would add **76 new files (about 17.8
 | `*.key`, `*.pem`, `reports/psystem_local/` | Private keys written by `src/psystem_cluster.py` (new rule) |
 | `*.db`, `*.sqlite*` | Local databases (new rule). The auth store already lives outside the repo, in `~/.config/lunar-mission-control/`. |
 | `video/` (27 MB) | Video work in progress: Blender scripts with a hard-coded `/home/...` path, generated `.npy`/`.png` data, render previews, fonts, and an Earth image whose provenance is not recorded. Not part of the submission. |
-| `LUNAR_P_SYSTEM_PRESENTATION.pdf`, `P-System Space Group · with P-System technology (1).pptx` | Presentation drafts at the root. The `(1)` file name suggests a browser-download duplicate. The official deck is in `submission/`. **The author must decide** whether to publish them (for example in `docs/presentations/`). To include them, remove the last two lines of `.gitignore`. |
+| `LUNAR_P_SYSTEM_PRESENTATION.pdf`, `P-System Space Group · with P-System technology (1).pptx` | Presentation drafts at the root. The `(1)` file name suggests a browser-download duplicate. The official deck is in `submission/`. **Update:** published at the author's request in commit `6a546c9`, under their original file names. The two `.gitignore` lines were removed. |
 
 Large datasets: the NASA terrain data (about 870 MB) is **already tracked and pushed**. No file exceeds GitHub's limit, so nothing was removed or untracked. The download sources are documented in `submission/NASA_DATA_SOURCES.md` and summarised in README §4.
 
@@ -83,7 +83,7 @@ Large datasets: the NASA terrain data (about 870 MB) is **already tracked and pu
 |---|---|---|
 | Git state, remote, sync | `git status`, `git rev-list` | OK, see §1 |
 | Secrets / credentials | Regex scan of every untracked file and of the working-tree diff (API keys, tokens, private-key headers, AWS/GitHub/OpenAI key patterns, hard-coded passwords) | **None found.** Matches were only variable names such as `api_token` and `csrf_token`. No `.key`/`.pem`/`.db` file is tracked. |
-| Personal data | Search for the author's e-mail in untracked files | Not found. The author's name appears in the root presentation PDF, which is excluded. |
+| Personal data | Search for the author's e-mail in untracked files | Not found. The author's name appears in the root presentation PDF, which the author later chose to publish (`6a546c9`). |
 | Absolute local paths | grep for `/home/` | Found in `reports/validation/terrain_cross_validation/*.json` and in 1 tracked file. This is already documented as a known limitation; the files were not edited because they are evidence. |
 | Internal links | Every relative link and in-page anchor in `README.md`, `docs/README_IT.md`, `submission/*.md` resolved on disk | All resolve |
 | Dependencies vs imports | Third-party imports in `src/`, `tests/`, `scripts/` compared with the requirements files | Found and fixed the missing `skyfield`. `qgis` (`src/style_descent_risk_map.py`, a QGIS-console script) and `PySide6` (optional) are not in `requirements.txt` by design. `submission/tools` needs `python-pptx`, `Pillow` and `lxml`, which are documented in `SUBMISSION_CHECKLIST.md`. |
@@ -112,7 +112,7 @@ Large datasets: the NASA terrain data (about 870 MB) is **already tracked and pu
 - Translating the Italian module docs.
 - Screenshots and video.
 
-## 11. Publication readiness
+## 11. Publication readiness (as assessed before publication)
 
 **Ready for review, not yet for publication.** The repository content is organised, documented and checked for secrets. Before publishing, the author should:
 
@@ -129,3 +129,22 @@ git status            # review: no .venv, backups, video, keys or presentation d
 git commit -m "Update repository for NASA Space Apps 2026: full source, English README, submission package"
 git push origin main
 ```
+
+## 12. Publication record
+
+All commits below were pushed to `origin/main` on 2026-11-15 at the author's explicit request.
+
+| Commit | Content |
+|---|---|
+| `ed112fe` | Full project update: 77 files added and 24 modified (source code, auth, Educators section, `start.sh`, new science modules, `reports/validation/`, `submission/`, English README, both reports). `.gitignore` was respected, so `.venv/`, `backups/`, `video/`, caches and key material were not published. |
+| `6a546c9` | The two root presentations (`LUNAR_P_SYSTEM_PRESENTATION.pdf`, `P-System Space Group · with P-System technology (1).pptx`) and the matching `.gitignore` change |
+| this commit | This report and `REPOSITORY_COMPLETENESS_AUDIT.md`, updated to match what was published |
+
+**Still open after publication:**
+1. No `LICENSE`.
+2. The test suite was not run.
+3. No UI screenshots exist.
+4. `video/` is still excluded.
+5. `SCIENCE_STATUS.txt` is outdated.
+6. The `.pptx` keeps the `(1)` download suffix in its name.
+7. There is no source URL for P-System.
