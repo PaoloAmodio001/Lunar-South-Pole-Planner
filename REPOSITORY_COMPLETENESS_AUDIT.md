@@ -146,7 +146,7 @@ Nessun file in `data/` è ignorato o non tracciato. Il file più grande è di 77
 |---|---|---|---|---|
 | **`video/`** (32 file, 27 MB) | 6 script Blender (`common.py`, `s01_opening.py`, `prep_data.py`, …), `bl.sh` con percorso `/home/paolo/...` scritto nel codice, heightmap `.npy` e PNG generati, 4 fotogrammi di anteprima, 7 font Lato/FiraCode, `earth_nasa_visible_earth.jpg` | No | Solo per il video, che è una bozza (solo la scena 1) | **Tenere escluso** finché il video non è finito. Per pubblicarlo servono tre cose: rimuovere il percorso assoluto da `bl.sh`, documentare la fonte dell'immagine della Terra (NASA Visible Earth, oggi non registrata) e pubblicare solo gli script, perché i dati si rigenerano con `prep_data.py`. Non è un problema di dimensioni. |
 | **`LUNAR_P_SYSTEM_PRESENTATION.pdf`** (316 KB) | Documento tecnico "Lunar South Pole Planner & P-System" firmato dall'autore | No | No | **Pubblicato** su richiesta dell'autore (commit `6a546c9`), nella radice. Contiene il nome dell'autore. Non ho verificato che i dati citati siano coerenti con la submission. |
-| **`P-System Space Group · with P-System technology (1).pptx`** (6,2 MB) | Bozza di presentazione; il "(1)" indica un download duplicato | No | No | **Pubblicato** su richiesta dell'autore (commit `6a546c9`) con il nome originale. La presentazione ufficiale resta `submission/…NASA_2026.pptx`. Si può ancora rinominare per togliere il suffisso "(1)". |
+| **`P-System Space Group · with P-System technology (1).pptx`** (6,2 MB) | Bozza di presentazione; il "(1)" indica un download duplicato | No | No | **Pubblicato** su richiesta dell'autore (commit `6a546c9`) con il nome originale. La presentazione ufficiale resta `submission/…NASA_2026.pptx`. Rinominato dopo, senza il suffisso "(1)": `P-System Space Group · with P-System technology.pptx`. |
 | `src/ui_web/node_modules/` (1.264 file) | three.js da npm | No: l'app usa `vendor/three/` (tracciato) | No | **Tenere escluso**. `package.json` è tracciato. |
 | `.venv/` | Ambiente Python | Sì, ma si rigenera con `requirements*.txt` | — | **Tenere escluso**, già documentato. |
 | `backups/` (3,2 GB), 147 copie `*.bak*`/`*.before-*` | Copie storiche, incluso il Site Explorer rimosso volontariamente | No | No | **Tenere escluso.** Il Site Explorer è stato rimosso su tua richiesta e non va ripubblicato. |
@@ -269,7 +269,8 @@ Tutti i commit sono stati pubblicati su `origin/main` il 2026-11-15, su autorizz
 |---|---|
 | `ed112fe` | 77 file aggiunti e 24 modificati: tutti i file "nuovi" e "modificati" di questo audit, più il file stesso. `.gitignore` rispettato: **non** sono stati pubblicati `.venv/`, `backups/`, `video/`, cache, copie `.bak` e chiavi. |
 | `6a546c9` | `LUNAR_P_SYSTEM_PRESENTATION.pdf`, `P-System Space Group · with P-System technology (1).pptx` e la relativa modifica a `.gitignore` |
-| questo commit | Aggiornamento di questo audit e di `REPOSITORY_UPDATE_REPORT.md` |
+| `655100d` | Aggiornamento di questo audit e di `REPOSITORY_UPDATE_REPORT.md` |
+| commit successivo | `.pptx` rinominato in `P-System Space Group · with P-System technology.pptx` (tolto "(1)") |
 
 **Esito aggiornato: COMPLETE**, ora anche su GitHub.
 
@@ -279,5 +280,4 @@ Tutti i commit sono stati pubblicati su `origin/main` il 2026-11-15, su autorizz
 - screenshot;
 - `video/`, ancora escluso;
 - `SCIENCE_STATUS.txt`, superato;
-- il nome del `.pptx`;
 - la fonte di P-System.

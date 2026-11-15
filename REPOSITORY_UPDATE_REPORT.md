@@ -67,7 +67,7 @@ After the `.gitignore` update, `git add -A` would add **76 new files (about 17.8
 | `*.key`, `*.pem`, `reports/psystem_local/` | Private keys written by `src/psystem_cluster.py` (new rule) |
 | `*.db`, `*.sqlite*` | Local databases (new rule). The auth store already lives outside the repo, in `~/.config/lunar-mission-control/`. |
 | `video/` (27 MB) | Video work in progress: Blender scripts with a hard-coded `/home/...` path, generated `.npy`/`.png` data, render previews, fonts, and an Earth image whose provenance is not recorded. Not part of the submission. |
-| `LUNAR_P_SYSTEM_PRESENTATION.pdf`, `P-System Space Group · with P-System technology (1).pptx` | Presentation drafts at the root. The `(1)` file name suggests a browser-download duplicate. The official deck is in `submission/`. **Update:** published at the author's request in commit `6a546c9`, under their original file names. The two `.gitignore` lines were removed. |
+| `LUNAR_P_SYSTEM_PRESENTATION.pdf`, `P-System Space Group · with P-System technology (1).pptx` | Presentation drafts at the root. The `(1)` file name suggests a browser-download duplicate. The official deck is in `submission/`. **Update:** published at the author's request in commit `6a546c9`, under their original file names. The two `.gitignore` lines were removed. The `.pptx` was later renamed to `P-System Space Group · with P-System technology.pptx`. |
 
 Large datasets: the NASA terrain data (about 870 MB) is **already tracked and pushed**. No file exceeds GitHub's limit, so nothing was removed or untracked. The download sources are documented in `submission/NASA_DATA_SOURCES.md` and summarised in README §4.
 
@@ -138,7 +138,8 @@ All commits below were pushed to `origin/main` on 2026-11-15 at the author's exp
 |---|---|
 | `ed112fe` | Full project update: 77 files added and 24 modified (source code, auth, Educators section, `start.sh`, new science modules, `reports/validation/`, `submission/`, English README, both reports). `.gitignore` was respected, so `.venv/`, `backups/`, `video/`, caches and key material were not published. |
 | `6a546c9` | The two root presentations (`LUNAR_P_SYSTEM_PRESENTATION.pdf`, `P-System Space Group · with P-System technology (1).pptx`) and the matching `.gitignore` change |
-| this commit | This report and `REPOSITORY_COMPLETENESS_AUDIT.md`, updated to match what was published |
+| `655100d` | This report and `REPOSITORY_COMPLETENESS_AUDIT.md`, updated to match what was published |
+| next commit | `.pptx` renamed to `P-System Space Group · with P-System technology.pptx` (`(1)` suffix removed) |
 
 **Still open after publication:**
 1. No `LICENSE`.
@@ -146,5 +147,4 @@ All commits below were pushed to `origin/main` on 2026-11-15 at the author's exp
 3. No UI screenshots exist.
 4. `video/` is still excluded.
 5. `SCIENCE_STATUS.txt` is outdated.
-6. The `.pptx` keeps the `(1)` download suffix in its name.
-7. There is no source URL for P-System.
+6. There is no source URL for P-System.
