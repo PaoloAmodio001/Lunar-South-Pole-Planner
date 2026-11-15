@@ -1,0 +1,194 @@
+{
+  "schema": "lunar-ephemeris-validation/1.0",
+  "generated_utc": "2026-11-15T13:11:07.842207+00:00",
+  "reference": {
+    "source": "NASA/JPL Horizons API",
+    "quantities": "4,20 (apparent az/el, range)",
+    "center": "coord@301",
+    "coord_type": "GEODETIC (sphere: planetocentric)"
+  },
+  "local": {
+    "source": "skyfield+spice-local",
+    "ephemeris": "JPL DE421 (de421.bsp)",
+    "orientation": "moon_pa_de421_1900-2050.bpc",
+    "frame": "MOON_ME_DE421",
+    "frame_kernel": "moon_080317.tf",
+    "constants": "pck00008.tpc",
+    "valid_utc": [
+      "1900-01-02T00:00:00+00:00",
+      "2049-12-31T00:00:00+00:00"
+    ],
+    "azimuth_convention": "clockwise from local north",
+    "elevation": "apparent, geometric horizon, no refraction"
+  },
+  "window": {
+    "start_utc": "2026-11-15T00:00:00+00:00",
+    "hours": 336,
+    "step": "6h"
+  },
+  "tolerances": {
+    "elevation_deg": 0.01,
+    "azimuth_deg": 0.01,
+    "distance_rel": 1e-06
+  },
+  "results": [
+    {
+      "site": "Shackleton",
+      "latitude_deg": -89.7668,
+      "longitude_east_deg": -171.87,
+      "target": "Sun",
+      "within_tolerance": true,
+      "samples": 57,
+      "elevation_deg": {
+        "max_abs": 1.3550986291743783e-05,
+        "mean_abs": 7.71161721592643e-06,
+        "rms": 8.772989299824232e-06,
+        "n": 57
+      },
+      "azimuth_deg": {
+        "max_abs": 4.078008174701608e-06,
+        "mean_abs": 2.940115381346786e-06,
+        "rms": 2.9869626436848732e-06,
+        "n": 57
+      },
+      "distance_rel": {
+        "max_abs": 3.300445213733891e-11,
+        "mean_abs": 2.2583005694973396e-11,
+        "rms": 2.470489924057217e-11,
+        "n": 57
+      }
+    },
+    {
+      "site": "Shackleton",
+      "latitude_deg": -89.7668,
+      "longitude_east_deg": -171.87,
+      "target": "Earth",
+      "within_tolerance": true,
+      "samples": 57,
+      "elevation_deg": {
+        "max_abs": 1.1504826700203807e-05,
+        "mean_abs": 9.382849919267793e-06,
+        "rms": 9.532021086607676e-06,
+        "n": 57
+      },
+      "azimuth_deg": {
+        "max_abs": 4.569580283941832e-06,
+        "mean_abs": 3.796631209465168e-06,
+        "rms": 3.812584290649051e-06,
+        "n": 57
+      },
+      "distance_rel": {
+        "max_abs": 1.0135457780382147e-09,
+        "mean_abs": 6.45123950336502e-10,
+        "rms": 7.082880429289627e-10,
+        "n": 57
+      }
+    },
+    {
+      "site": "Connecting Ridge",
+      "latitude_deg": -89.4632,
+      "longitude_east_deg": -137.49,
+      "target": "Sun",
+      "within_tolerance": true,
+      "samples": 57,
+      "elevation_deg": {
+        "max_abs": 1.3505246211131805e-05,
+        "mean_abs": 7.65050731650107e-06,
+        "rms": 8.72801378736761e-06,
+        "n": 57
+      },
+      "azimuth_deg": {
+        "max_abs": 4.1006056790138246e-06,
+        "mean_abs": 2.951918854446296e-06,
+        "rms": 2.9882424689297583e-06,
+        "n": 57
+      },
+      "distance_rel": {
+        "max_abs": 3.3007481213360244e-11,
+        "mean_abs": 2.258124504257994e-11,
+        "rms": 2.4703009884489444e-11,
+        "n": 57
+      }
+    },
+    {
+      "site": "Connecting Ridge",
+      "latitude_deg": -89.4632,
+      "longitude_east_deg": -137.49,
+      "target": "Earth",
+      "within_tolerance": true,
+      "samples": 57,
+      "elevation_deg": {
+        "max_abs": 1.1741014004140737e-05,
+        "mean_abs": 9.438670688820042e-06,
+        "rms": 9.591250165741179e-06,
+        "n": 57
+      },
+      "azimuth_deg": {
+        "max_abs": 4.689273879421307e-06,
+        "mean_abs": 3.7112279636331597e-06,
+        "rms": 3.731854569233535e-06,
+        "n": 57
+      },
+      "distance_rel": {
+        "max_abs": 1.0124818016664283e-09,
+        "mean_abs": 6.437958542156859e-10,
+        "rms": 7.070650692820718e-10,
+        "n": 57
+      }
+    },
+    {
+      "site": "Nobile",
+      "latitude_deg": -85.4381,
+      "longitude_east_deg": 37.36667,
+      "target": "Sun",
+      "within_tolerance": true,
+      "samples": 57,
+      "elevation_deg": {
+        "max_abs": 1.3049091732053597e-05,
+        "mean_abs": 7.502655907576178e-06,
+        "rms": 8.524630534320724e-06,
+        "n": 57
+      },
+      "azimuth_deg": {
+        "max_abs": 4.966105109360797e-06,
+        "mean_abs": 3.4065528012162534e-06,
+        "rms": 3.499892297087701e-06,
+        "n": 57
+      },
+      "distance_rel": {
+        "max_abs": 3.3044108376010124e-11,
+        "mean_abs": 2.2612613854047335e-11,
+        "rms": 2.4736670484070463e-11,
+        "n": 57
+      }
+    },
+    {
+      "site": "Nobile",
+      "latitude_deg": -85.4381,
+      "longitude_east_deg": 37.36667,
+      "target": "Earth",
+      "within_tolerance": true,
+      "samples": 57,
+      "elevation_deg": {
+        "max_abs": 1.1532783696921456e-05,
+        "mean_abs": 9.21656028423482e-06,
+        "rms": 9.372735786940078e-06,
+        "n": 57
+      },
+      "azimuth_deg": {
+        "max_abs": 5.3765382972414955e-06,
+        "mean_abs": 4.378600893137206e-06,
+        "rms": 4.396076003784994e-06,
+        "n": 57
+      },
+      "distance_rel": {
+        "max_abs": 1.0330919770011983e-09,
+        "mean_abs": 6.549312774570142e-10,
+        "rms": 7.187023008380254e-10,
+        "n": 57
+      }
+    }
+  ],
+  "all_within_tolerance": true,
+  "scope": "Valida la geometria Sole/Terra calcolata localmente rispetto a Horizons. Non valida orizzonte DEM, ombre del terreno o georeferenziazione del raster."
+}

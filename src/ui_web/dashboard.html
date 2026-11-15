@@ -1,0 +1,73 @@
+<!-- Last updated: 2026-11-15 -->
+<!doctype html>
+<html lang="it" data-ui="v2">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="same-origin">
+<title>Mission Planners · Lunar Mission Control</title>
+<script src="/session.js"></script>
+<link rel="stylesheet" href="/ui/tokens.css">
+<link rel="stylesheet" href="/ui/base.css">
+<link rel="stylesheet" href="/ui/shell.css">
+<link rel="stylesheet" href="/ui/portal.css">
+<link rel="icon" href="/ui/icon.svg" type="image/svg+xml">
+<script src="/dashboard.js" defer></script>
+</head>
+<body class="portal">
+<header class="shell-bar">
+ <div class="shell-brand">
+  <svg class="shell-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 18.5c4 1.6 8.4 2.4 13 2.4s9-.8 13-2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="25.6" r="2.4" fill="#5CCFE6"/></svg>
+  <span class="shell-title">Lunar Mission Control</span>
+ </div>
+ <a class="shell-link" href="/" title="Torna alla piattaforma pubblica (accesso libero)">&larr; Piattaforma pubblica</a>
+ <p class="shell-context" id="sessionUser" aria-live="polite"></p>
+ <ul class="shell-status" aria-label="Stato del sistema">
+  <li><span class="status-dot" id="hdrServerDot" data-state="unknown"></span><span class="status-name">Server</span> <strong id="hdrServer">verifica in corso</strong></li>
+  <li class="shell-clock"><time id="hdrClock">--:--:--</time> UTC</li>
+ </ul>
+ <form class="shell-logout" method="post" action="/auth/logout"><button type="submit">Esci</button></form>
+</header>
+
+<div class="portal-main" role="main">
+ <p class="eyebrow">Lunar South Pole · Exploration Platform</p>
+ <h1>Mission Control</h1>
+ <p class="lede">Dashboard della sezione riservata Pianificatori di missione: da qui si apre Lunar Mission Control Planner. Lo stato dei servizi è verificato in tempo reale: nessun dato dimostrativo.</p>
+
+ <div class="section-head"><h2 id="plannersTitle">MISSION PLANNERS</h2><p>Un unico accesso per tutti i pianificatori</p></div>
+ <div class="planner-grid" aria-labelledby="plannersTitle">
+  <article class="portal-panel planner-card" data-app="control">
+   <span class="planner-tag">Planner principale</span>
+   <h3>Lunar Mission Control</h3>
+   <p>Motori scientifici e ingegneristici della piattaforma.</p>
+   <ul>
+    <li>Analisi astronomica (NASA/JPL Horizons) e finestre operative</li>
+    <li>Solar Energy Engine e bilancio energetico</li>
+    <li>Comunicazioni (link budget) e termica</li>
+    <li>Rover: percorso A* e stima energetica</li>
+    <li>Mission Engine e Mission Decision Engine</li>
+   </ul>
+   <div class="planner-meta"><span class="status-dot" id="controlDot" data-state="unknown"></span><span id="controlState">verifica in corso</span></div>
+   <div class="planner-actions">
+    <a class="btn btn-primary" href="/mission-control" id="openControl">Apri Lunar Mission Control</a>
+   </div>
+  </article>
+ </div>
+
+ <div class="section-head"><h2 id="servicesTitle">STATO DEI SERVIZI</h2><p id="servicesChecked">—</p></div>
+ <section class="portal-panel" aria-labelledby="servicesTitle">
+  <ul class="service-list">
+   <li><span class="service-name"><span class="status-dot" id="svcBackendDot" data-state="unknown"></span>Backend Python</span><span class="service-detail" id="svcBackend">verifica in corso</span></li>
+   <li><span class="service-name"><span class="status-dot" id="svcJplDot" data-state="unknown"></span>Effemeridi NASA/JPL Horizons</span><span class="service-detail" id="svcJpl">verifica in corso</span></li>
+   <li><span class="service-name"><span class="status-dot" id="svcSessionDot" data-state="unknown"></span>Sessione</span><span class="service-detail" id="svcSession">verifica in corso</span></li>
+  </ul>
+  <div class="service-actions">
+   <button class="btn" type="button" id="refreshServices">Verifica di nuovo</button>
+   <small>La verifica di JPL Horizons è una richiesta leggera senza effemeridi, ripetuta al massimo una volta al minuto.</small>
+  </div>
+ </section>
+
+ <p class="portal-foot">Risultati preliminari, non certificati per la pianificazione operativa.</p>
+</div>
+</body>
+</html>

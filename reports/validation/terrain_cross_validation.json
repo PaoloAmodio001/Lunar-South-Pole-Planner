@@ -1,0 +1,254 @@
+{
+  "schema": "lunar-terrain-cross-validation/1.0",
+  "generated_utc": "2026-11-15T12:55:49.107057+00:00",
+  "datasets": {
+    "lola": "data/terrain/official-lola/Site04_final_adj_5mpp_surf.tif",
+    "lroc": "data/terrain/reference-lroc/NAC_DTM_ESALL_SR12.TIF"
+  },
+  "window": {
+    "start_utc": "2026-11-15T00:00:00+00:00",
+    "days": 28.0,
+    "step_minutes": 60
+  },
+  "azimuth_step_deg": 2.0,
+  "observer_height_m": 2.0,
+  "points": [
+    {
+      "point": 1,
+      "x_m": -3274.333333333333,
+      "y_m": -9259.0,
+      "latitude_deg": -89.67612789811409,
+      "longitude_east_deg": -160.52447535629437,
+      "max_distance_m": 590.0,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": -1.4942919347452046,
+        "rms": 1.9814730903352906,
+        "max_abs": 4.17540473904848
+      },
+      "sun_visible_fraction": {
+        "lola": 0.2540861812778603,
+        "lroc": 0.20950965824665677
+      },
+      "sun_visibility_agreement": 0.9554234769687965
+    },
+    {
+      "point": 2,
+      "x_m": -2007.6666666666665,
+      "y_m": -9259.0,
+      "latitude_deg": -89.68756283189131,
+      "longitude_east_deg": -167.76571614122486,
+      "max_distance_m": 590.0,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": -0.052111892886607315,
+        "rms": 0.27101207389728255,
+        "max_abs": 1.0520285702423742
+      },
+      "sun_visible_fraction": {
+        "lola": 0.4457652303120357,
+        "lroc": 0.4427934621099554
+      },
+      "sun_visibility_agreement": 0.9970282317979198
+    },
+    {
+      "point": 4,
+      "x_m": -4541.0,
+      "y_m": -7992.333333333333,
+      "latitude_deg": -89.69685863289469,
+      "longitude_east_deg": -150.39608297775652,
+      "max_distance_m": 590.0,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": 0.41508903677088066,
+        "rms": 0.9592246050076219,
+        "max_abs": 2.654326986462414
+      },
+      "sun_visible_fraction": {
+        "lola": 0.512630014858841,
+        "lroc": 0.5364041604754829
+      },
+      "sun_visibility_agreement": 0.9732540861812778
+    },
+    {
+      "point": 5,
+      "x_m": -3274.333333333333,
+      "y_m": -7992.333333333333,
+      "latitude_deg": -89.71516889972418,
+      "longitude_east_deg": -157.7218587127729,
+      "max_distance_m": 1856.666666666667,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": 0.003170157447777595,
+        "rms": 0.6981930455478063,
+        "max_abs": 3.205198998026928
+      },
+      "sun_visible_fraction": {
+        "lola": 0.4903417533432392,
+        "lroc": 0.4903417533432392
+      },
+      "sun_visibility_agreement": 1.0
+    },
+    {
+      "point": 6,
+      "x_m": -2007.6666666666665,
+      "y_m": -7992.333333333333,
+      "latitude_deg": -89.728241681337,
+      "longitude_east_deg": -165.89911464836436,
+      "max_distance_m": 1856.6666666666665,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": -0.07673573865038208,
+        "rms": 1.009313293542164,
+        "max_abs": 13.314480578479191
+      },
+      "sun_visible_fraction": {
+        "lola": 0.45022288261515603,
+        "lroc": 0.45022288261515603
+      },
+      "sun_visibility_agreement": 1.0
+    },
+    {
+      "point": 9,
+      "x_m": -3274.333333333333,
+      "y_m": -6725.666666666666,
+      "latitude_deg": -89.75331377650252,
+      "longitude_east_deg": -154.0412609433468,
+      "max_distance_m": 1856.666666666666,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": 0.46865067798385684,
+        "rms": 0.7264194072132787,
+        "max_abs": 2.531339466994578
+      },
+      "sun_visible_fraction": {
+        "lola": 0.5393759286775631,
+        "lroc": 0.5393759286775631
+      },
+      "sun_visibility_agreement": 1.0
+    },
+    {
+      "point": 10,
+      "x_m": -2007.6666666666665,
+      "y_m": -6725.666666666666,
+      "latitude_deg": -89.76853098271698,
+      "longitude_east_deg": -163.3792041707781,
+      "max_distance_m": 1856.666666666666,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": -0.07159935530245756,
+        "rms": 0.353614867450526,
+        "max_abs": 1.5398733599721943
+      },
+      "sun_visible_fraction": {
+        "lola": 0.4710252600297177,
+        "lroc": 0.4710252600297177
+      },
+      "sun_visibility_agreement": 1.0
+    },
+    {
+      "point": 12,
+      "x_m": -4541.0,
+      "y_m": -5459.0,
+      "latitude_deg": -89.76583094835259,
+      "longitude_east_deg": -140.2450517546235,
+      "max_distance_m": 590.0,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": -0.2304917286249942,
+        "rms": 4.396995163480638,
+        "max_abs": 58.32779859549288
+      },
+      "sun_visible_fraction": {
+        "lola": 0.5794947994056464,
+        "lroc": 0.5676077265973254
+      },
+      "sun_visibility_agreement": 0.9881129271916791
+    },
+    {
+      "point": 13,
+      "x_m": -3274.333333333333,
+      "y_m": -5459.0,
+      "latitude_deg": -89.79007341409293,
+      "longitude_east_deg": -149.0444760636653,
+      "max_distance_m": 590.0,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": 0.038681678273576874,
+        "rms": 0.49231102176915786,
+        "max_abs": 2.599795512127683
+      },
+      "sun_visible_fraction": {
+        "lola": 0.5943536404160475,
+        "lroc": 0.5913818722139673
+      },
+      "sun_visibility_agreement": 0.9970282317979198
+    },
+    {
+      "point": 14,
+      "x_m": -2007.6666666666665,
+      "y_m": -5459.0,
+      "latitude_deg": -89.80818505749353,
+      "longitude_east_deg": -159.80789731957816,
+      "max_distance_m": 590.0,
+      "azimuths_compared": 180,
+      "horizon_diff_deg": {
+        "mean": -0.15539375768852035,
+        "rms": 0.4694254745188432,
+        "max_abs": 1.7742001972682715
+      },
+      "sun_visible_fraction": {
+        "lola": 0.4591381872213967,
+        "lroc": 0.4591381872213967
+      },
+      "sun_visibility_agreement": 1.0
+    }
+  ],
+  "skipped_points": [
+    {
+      "point": 0,
+      "x_m": -4541.0,
+      "y_m": -9259.0,
+      "reason": "Quota osservatore non valida"
+    },
+    {
+      "point": 3,
+      "x_m": -741.0,
+      "y_m": -9259.0,
+      "reason": "Quota osservatore non valida"
+    },
+    {
+      "point": 7,
+      "x_m": -741.0,
+      "y_m": -7992.333333333333,
+      "reason": "Quota osservatore non valida"
+    },
+    {
+      "point": 8,
+      "x_m": -4541.0,
+      "y_m": -6725.666666666666,
+      "reason": "Quota osservatore non valida"
+    },
+    {
+      "point": 11,
+      "x_m": -741.0,
+      "y_m": -6725.666666666666,
+      "reason": "Quota osservatore non valida"
+    },
+    {
+      "point": 15,
+      "x_m": -741.0,
+      "y_m": -5459.0,
+      "reason": "Quota osservatore non valida"
+    }
+  ],
+  "summary": {
+    "points": 10,
+    "skipped": 6,
+    "median_horizon_rms_deg": 0.7123062263805424,
+    "worst_horizon_rms_deg": 4.396995163480638,
+    "median_sun_visibility_agreement": 0.9985141158989599,
+    "worst_sun_visibility_agreement": 0.9554234769687965
+  },
+  "scope": "Coerenza tra due DEM indipendenti entro la sovrapposizione (orizzonte limitato a pochi km). Non è un confronto con osservazioni di illuminazione."
+}

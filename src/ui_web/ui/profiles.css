@@ -30,9 +30,20 @@
 [data-ui="v2"] .profile-footer { display: none; }
 
 /* Educatore: la numerazione delle lezioni è un percorso reale */
-[data-ui="v2"] #educatorHome { min-height: calc(100dvh - 52px); background: var(--ui-abyss); padding: var(--ui-space-12) var(--ui-space-4); }
-[data-ui="v2"] .educator-content { max-width: 880px; }
-[data-ui="v2"] .educator-content > p { color: var(--ui-text-muted); max-width: 72ch; }
+/* Il layout della nuova sezione Educatori è gestito esclusivamente da educator.css. */
+[data-ui="v2"] #educatorHome {
+  min-height: calc(100dvh - 52px);
+  max-width: none;
+  padding: 0;
+}
+[data-ui="v2"] #educatorHome .educator-content {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+}
+[data-ui="v2"] #educatorHome .educator-content > p {
+  color: var(--ui-text-muted);
+}
 [data-ui="v2"] .lesson-grid { gap: 1px; background: var(--ui-rule); border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel); overflow: hidden; }
 [data-ui="v2"] .lesson-card { border: 0; border-radius: 0; background: var(--ui-anthracite); padding: var(--ui-space-6); }
 [data-ui="v2"] .lesson-card > span { font-size: var(--ui-text-12); color: var(--ui-cyan); letter-spacing: 0; font-weight: 600; }

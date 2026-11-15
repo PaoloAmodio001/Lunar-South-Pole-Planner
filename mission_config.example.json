@@ -58,7 +58,8 @@
       "10",
       "399"
     ],
-    "report_name": "astronomy_observations.json"
+    "report_name": "astronomy_observations.json",
+    "source": "horizons"
   },
   "illumination": {
     "enabled": false,
@@ -135,6 +136,92 @@
     "enabled": false,
     "description": "Stima energetica preliminare; richiede parametri reali del rover."
   },
+  "solar_energy": {
+    "enabled": false,
+    "description": "Solar Energy Engine: produzione fotovoltaica e bilancio della batteria nel tempo. Modello preliminare non validato. Richiede astronomy e illumination abilitati e parametri hardware reali: i valori null sono input mancanti e producono un report parziale.",
+    "report_name": "solar_energy_budget.json",
+    "solar_constant_w_m2": 1360.8,
+    "allow_1au_distance_fallback": false,
+    "solar_array": {
+      "area_m2": null,
+      "cell_efficiency": null,
+      "orientation_mode": null,
+      "tilt_deg": null,
+      "azimuth_deg": null,
+      "system_loss_fraction": null,
+      "dust_loss_fraction": null,
+      "degradation_fraction": null,
+      "max_output_w": null,
+      "thermal": {
+        "temperature_coefficient_per_c": null,
+        "cell_temperature_c": null,
+        "reference_temperature_c": null
+      }
+    },
+    "battery": {
+      "capacity_wh": null,
+      "min_reserve_fraction": null,
+      "initial_soc_fraction": null,
+      "charge_efficiency": null,
+      "discharge_efficiency": null
+    },
+    "consumption": {
+      "default_mode": "standby",
+      "traction_power_w": null,
+      "modes": {
+        "standby": {
+          "auxiliary_w": null,
+          "science_w": null,
+          "communications_w": null,
+          "thermal_control_w": null,
+          "traction": false
+        },
+        "drive": {
+          "auxiliary_w": null,
+          "science_w": null,
+          "communications_w": null,
+          "thermal_control_w": null,
+          "traction": true
+        },
+        "science": {
+          "auxiliary_w": null,
+          "science_w": null,
+          "communications_w": null,
+          "thermal_control_w": null,
+          "traction": false
+        }
+      },
+      "schedule": []
+    },
+    "documentation": {
+      "solar_constant_w_m2": "W/m^2. Irradianza solare totale a 1 UA. 1360.8 da Kopp & Lean (2011), GRL 38, L01706. Costante fisica, non caratteristica del rover.",
+      "allow_1au_distance_fallback": "booleano. Se true e Horizons non fornisce distance_au, usa 1 UA (errore fino a ~3.4% sull'irradianza). Default false: campione non calcolabile.",
+      "solar_array.area_m2": "m^2. Area attiva totale delle celle. OBBLIGATORIO.",
+      "solar_array.cell_efficiency": "frazione (0,1]. Efficienza di conversione delle celle alle condizioni di riferimento. OBBLIGATORIO.",
+      "solar_array.orientation_mode": "fixed | azimuth_tracking | two_axis_tracking. fixed: normale con tilt e azimut costanti; azimuth_tracking: segue l'azimut del Sole con tilt costante; two_axis_tracking: incidenza normale. OBBLIGATORIO.",
+      "solar_array.tilt_deg": "gradi [0,180] dall'orizzontale (0 = pannello orizzontale rivolto verso lo zenit, 90 = verticale). Obbligatorio per fixed e azimuth_tracking.",
+      "solar_array.azimuth_deg": "gradi [0,360) dell'azimut della normale del pannello, nello STESSO frame azimutale topocentrico di JPL Horizons (da nord verso est). Obbligatorio per fixed. Frame non validato indipendentemente.",
+      "solar_array.system_loss_fraction": "frazione [0,1). Perdite di MPPT, cablaggi, conversione e diodi. OBBLIGATORIO.",
+      "solar_array.dust_loss_fraction": "frazione [0,1]. Riduzione per contaminazione da polvere/regolite. OBBLIGATORIO (0 se ritenuto trascurabile, scelta esplicita).",
+      "solar_array.degradation_fraction": "frazione [0,1]. Degrado cumulato delle celle (radiazione, cicli termici) al momento della missione. OBBLIGATORIO.",
+      "solar_array.max_output_w": "W. Opzionale. Limite di potenza dell'elettronica di potenza; null = nessun limite applicato.",
+      "solar_array.thermal": "Opzionale; se uno è valorizzato servono tutti e tre. Fattore = 1 + temperature_coefficient_per_c * (cell_temperature_c - reference_temperature_c). Coefficiente in 1/°C (tipicamente negativo), temperature in °C. Temperatura della cella costante: limite del modello.",
+      "battery.capacity_wh": "Wh. Capacità utilizzabile della batteria. OBBLIGATORIO; se assente usa energy.battery_capacity_wh (provenienza registrata).",
+      "battery.min_reserve_fraction": "frazione [0,1). Riserva minima di pianificazione. OBBLIGATORIO; se assente usa energy.reserve_percent/100.",
+      "battery.initial_soc_fraction": "frazione [0,1]. Stato di carica al primo campione astronomico. OBBLIGATORIO.",
+      "battery.charge_efficiency": "frazione (0,1]. Energia immagazzinata / energia fornita in carica. OBBLIGATORIO.",
+      "battery.discharge_efficiency": "frazione (0,1]. Energia erogata al bus / energia prelevata. OBBLIGATORIO.",
+      "consumption.default_mode": "Nome della modalità usata nel tempo non coperto da schedule (soste). Deve esistere in modes.",
+      "consumption.modes.<nome>.auxiliary_w": "W. Avionica, computer di bordo e sistemi ausiliari nella modalità. OBBLIGATORIO per ogni modalità usata; se assente usa energy.auxiliary_power_w.",
+      "consumption.modes.<nome>.science_w": "W. Strumentazione scientifica nella modalità. OBBLIGATORIO (0 se spenta).",
+      "consumption.modes.<nome>.communications_w": "W. Sottosistema di comunicazione nella modalità. OBBLIGATORIO (0 se spento).",
+      "consumption.modes.<nome>.thermal_control_w": "W. Opzionale. Riscaldatori/controllo termico; null = non valutato (segnalato nel report).",
+      "consumption.modes.<nome>.traction": "booleano. true se nella modalità il rover guida e consuma potenza di trazione.",
+      "consumption.traction_power_w": "W. Opzionale. Potenza media di trazione durante la guida. Se null, l'energia di trazione del report rover_energy (traction_after_drivetrain) è distribuita uniformemente sulle ore di guida pianificate.",
+      "consumption.schedule": "Lista di {start_utc, end_utc, mode}: intervalli ISO 8601 con fuso orario, non sovrapposti. Il tempo non coperto usa default_mode.",
+      "assumptions": "Irradianza S0/d^2 senza atmosfera; produzione nulla con Sole occultato dal terreno; incidenza coseno troncata a zero; potenza costante su ogni intervallo pari al campione iniziale; riserva come vincolo di pianificazione (nessun distacco carichi). Dettagli in docs/solar_energy_engine.md."
+    }
+  },
   "fleet": {
     "enabled": false,
     "rovers": [],
@@ -144,5 +231,52 @@
     "enabled": false,
     "node_id": "lunar-planner-local",
     "path": "reports/mission/mission_events.jsonl"
+  },
+  "psystem": {
+    "enabled": false,
+    "node_id": "planner-ground",
+    "node_urls": [
+      "http://127.0.0.1:8080"
+    ],
+    "genesis_path": "reports/psystem_local/genesis.json",
+    "state_dir": "reports/psystem_bridge",
+    "psystem_home": null,
+    "confirm_timeout_s": 30,
+    "report_name": "psystem_reconciled_view.json"
+  },
+  "fleet_dem": {
+    "enabled": false,
+    "dem_path": "data/terrain/official-lola/Site04_final_adj_5mpp_surf.tif",
+    "rovers": [
+      {
+        "id": "rover-1",
+        "start_rc": [
+          1600,
+          1599
+        ],
+        "available_energy_wh": 50.0,
+        "energy_wh_per_m": 0.02,
+        "max_slope_deg": 20.0,
+        "capabilities": [
+          "camera"
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "id": "survey-1",
+        "target_rc": [
+          1640,
+          1630
+        ],
+        "priority": 1,
+        "required_capabilities": [
+          "camera"
+        ],
+        "requires_earth_contact": false
+      }
+    ],
+    "communications": null,
+    "report_name": "multi_rover_dem_plan.json"
   }
 }

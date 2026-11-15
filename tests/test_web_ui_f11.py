@@ -43,7 +43,16 @@ def _request(port, path, method="GET", headers=None):
     return resp, body
 
 
-@pytest.mark.parametrize("path", ["/", "/ui/tokens.css", GLB])
+def test_html_pages_are_never_cached(server):
+    # Dal 2026-11-15 le pagine HTML sono servite con no-store (README, "Il server deve restare in
+    # esecuzione"): una scheda ripristinata non deve mostrare una pagina viva con il backend spento.
+    head, _ = _request(server, "/", "HEAD")
+    assert head.status == 200
+    assert head.getheader("Cache-Control") == "no-store"
+    assert head.getheader("ETag") is None
+
+
+@pytest.mark.parametrize("path", ["/ui/tokens.css", GLB])
 def test_static_has_validators_and_revalidates(server, path):
     head, _ = _request(server, path, "HEAD")
     assert head.status == 200

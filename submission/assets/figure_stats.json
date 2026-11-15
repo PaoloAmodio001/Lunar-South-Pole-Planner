@@ -1,0 +1,49 @@
+{
+  "Shackleton:Sun": {
+    "n": 57,
+    "min": 1.290815,
+    "max": 1.621798,
+    "frac_above_0": 1.0
+  },
+  "Connecting Ridge:Sun": {
+    "n": 57,
+    "min": 1.004141,
+    "max": 1.559679,
+    "frac_above_0": 1.0
+  },
+  "Nobile:Sun": {
+    "n": 57,
+    "min": 1.240601,
+    "max": 6.100925,
+    "frac_above_0": 1.0
+  },
+  "Shackleton:Earth": {
+    "n": 57,
+    "min": -3.781914,
+    "max": 6.022651,
+    "frac_above_0": 0.7894736842105263
+  },
+  "Connecting Ridge:Earth": {
+    "n": 57,
+    "min": -3.931401,
+    "max": 5.878666,
+    "frac_above_0": 0.7894736842105263
+  },
+  "Nobile:Earth": {
+    "n": 57,
+    "min": -0.055244,
+    "max": 9.707783,
+    "frac_above_0": 0.9824561403508771
+  },
+  "ephemeris_validation_max_elev_err_deg": 1.3550986291743783e-05,
+  "ephemeris_validation_max_az_err_deg": 5.3765382972414955e-06,
+  "ephemeris_all_within_tolerance": true,
+  "terrain_cv_summary": {
+    "points": 10,
+    "skipped": 6,
+    "median_horizon_rms_deg": 0.7123062263805424,
+    "worst_horizon_rms_deg": 4.396995163480638,
+    "median_sun_visibility_agreement": 0.9985141158989599,
+    "worst_sun_visibility_agreement": 0.9554234769687965
+  }
+}

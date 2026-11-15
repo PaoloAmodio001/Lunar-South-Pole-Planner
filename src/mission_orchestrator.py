@@ -20,7 +20,8 @@ import rasterio
 from src.rover_planning import plan_rover_path
 from src.route_quality import analyze_route_quality
 from src.rover_energy import estimate_route_energy
-from src.multi_rover import allocate_tasks
+from src.multi_rover import allocate_tasks, plan_fleet_on_dem
+from src.local_ephemeris import provenance as local_ephemeris_provenance, query_observations_local
 from src.psystem_adapter import MissionJournal
 from src.lola_lroc_quality import compare_lola_lroc_quality
 from src.descent_hazard_detection import analyze_descent_patch
@@ -45,6 +46,8 @@ from src.lunar_geometry import (
     validate_site_in_raster,
 )
 from src.mission_report import build_mission_report, write_mission_report
+from src.mission_decision_engine import build_mission_decision
+from src.solar_energy_engine import build_solar_energy_budget
 from src.paths import PROJECT_ROOT, resolve_project_path
 
 
@@ -124,6 +127,26 @@ def _finite(value, name, minimum=None):
         raise ValueError(f"{name}: deve essere >= {minimum}.")
     return number
 
+
+
+_STEP_UNIT_SECONDS = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+
+
+def _astronomy_step_seconds(step_size):
+    """Converte il passo astronomico configurato (es. 30m, 1h) in secondi.
+
+    Restituisce None se il valore non è interpretabile o non è positivo:
+    il chiamante decide se trattarlo come errore o come continuità non
+    determinabile. Nessun valore viene dedotto o sostituito.
+    """
+    step_match = re.fullmatch(
+        r"\s*(\d+(?:\.\d+)?)\s*([smhd])\s*",
+        str(step_size).lower(),
+    )
+    if not step_match:
+        return None
+    seconds = float(step_match.group(1)) * _STEP_UNIT_SECONDS[step_match.group(2)]
+    return seconds if seconds > 0 else None
 
 
 def _diagnose_temporal_continuity(sun_rows, earth_rows, expected_step_seconds):
@@ -401,6 +424,89 @@ def validate_mission_site_identity(config: dict) -> dict:
     return summary
 
 
+def _step_minutes(step: str) -> float:
+    """Passo Horizons ('30m', '1h', '2d') in minuti."""
+    text = str(step).strip().lower()
+    units = {"m": 1.0, "h": 60.0, "d": 1440.0}
+    if not text or text[-1] not in units:
+        raise ValueError(f"Passo non riconosciuto: {step!r}")
+    value = float(text[:-1])
+    if value <= 0:
+        raise ValueError("Il passo deve essere positivo.")
+    return value * units[text[-1]]
+
+
+def _file_sha256(path) -> str | None:
+    import hashlib
+    try:
+        digest = hashlib.sha256()
+        with open(path, "rb") as stream:
+            for chunk in iter(lambda: stream.read(1 << 20), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+    except OSError:
+        return None
+
+
+def _psystem_sync(psystem_cfg: dict, report: dict, run_id: str, output_dir: Path) -> dict:
+    """Pubblica i risultati della corsa come mission record P-System e legge la vista certificata."""
+    import time as _time
+    from src.psystem_adapter import BridgeConfig, CERTIFIED, PSystemBridge, SUPERSEDED
+
+    bridge = PSystemBridge(BridgeConfig.from_dict(psystem_cfg, root=PROJECT_ROOT))
+    node_id = str(psystem_cfg.get("node_id", "planner-ground"))
+    published = []
+    try:
+        for name, item in report["steps"].items():
+            body = {"run_id": run_id, "step": name, "status": item["status"],
+                    "error": item.get("error")}
+            result = item.get("result") if isinstance(item.get("result"), dict) else {}
+            artifact = result.get("report_file") or result.get("output_path")
+            if artifact:
+                body["artifact"] = Path(str(artifact)).name
+                body["artifact_sha256"] = _file_sha256(artifact)
+            for key in ("candidates_ranked", "distance_m", "estimated_energy_wh", "assigned",
+                        "observation_counts", "ephemeris_source", "status_summary"):
+                if key in result and isinstance(result[key], (int, float, str, dict)):
+                    body[key] = result[key]
+            published.append(bridge.publish(node_id, f"mission-step:{name}",
+                                            "result" if item["status"] == "success" else "status", body))
+        # Il record della corsa dipende dai record dei suoi step: archi del DAG causale.
+        step_ids = [p["event_id"] for p in published]
+        published.append(bridge.publish(node_id, f"mission-run:{run_id}", "report", parents=step_ids, body={"run_id": run_id, "steps": len(report["steps"]),
+                                         "failed_steps": sorted(n for n, i in report["steps"].items()
+                                                                if i["status"] != "success"),
+                                         "artifacts": {k: Path(str(v)).name for k, v in report["artifacts"].items()}}))
+        deadline = _time.monotonic() + float(psystem_cfg.get("confirm_timeout_s", 30))
+        flushed = bridge.flush()
+        confirmed = bridge.confirm()
+        while confirmed["waiting"] and _time.monotonic() < deadline:
+            _time.sleep(0.3)
+            bridge.flush()
+            confirmed = bridge.confirm()
+        view = bridge.reconciled_view()
+        view["nodes"] = bridge.node_status()
+        view["published_this_run"] = [p["event_id"] for p in published]
+        artifact = output_dir / psystem_cfg.get("report_name", "psystem_reconciled_view.json")
+        _write_json(view, artifact)
+        report["artifacts"]["psystem_view"] = str(artifact)
+        mine = {o["event_id"]: o["status"] for o in view["outbox"]}
+        return {
+            "connected_to_remote_psystem": view["connected_to_remote_psystem"],
+            "node_id": node_id,
+            "account": bridge.account_of(node_id),
+            "published": len(published),
+            "certified": sum(mine.get(p["event_id"]) == CERTIFIED for p in published),
+            "superseded": sum(mine.get(p["event_id"]) == SUPERSEDED for p in published),
+            "waiting": confirmed["waiting"],
+            "first_flush": flushed,
+            "records_verified_on_node": view["records_verified"],
+            "report_file": str(artifact),
+        }
+    finally:
+        bridge.close()
+
+
 def run_mission_workflow(config_path):
     config_path = resolve_config_file(config_path)
     # I percorsi relativi della configurazione sono relativi a PROJECT_ROOT,
@@ -425,7 +531,9 @@ def run_mission_workflow(config_path):
             "Risultati preliminari, non certificati per operazioni reali.",
             "Georeferenziazione e frame fisico lunare non validati indipendentemente.",
             "L'allocazione multi-rover usa distanze euclidee, non percorsi DEM.",
-            "Il journal è locale e non si connette a nodi P-System remoti.",
+            ("Gli eventi della missione sono pubblicati come record certificati su P-System (step psystem_sync)."
+             if config.get("psystem", {}).get("enabled", False) else
+             "Il journal è locale; il collegamento a P-System si attiva con la sezione 'psystem' della configurazione."),
         ],
     }
 
@@ -467,6 +575,11 @@ def run_mission_workflow(config_path):
             step_size = astronomy_cfg.get("step", "1h")
             targets = astronomy_cfg.get("targets", ["10", "399"])
             names = {"10": "Sun", "399": "Earth"}
+            # "horizons" (rete, NASA/JPL) oppure "local" (Skyfield + kernel SPICE inclusi, offline;
+            # concordanza con Horizons misurata da src/ephemeris_validation.py).
+            source = str(astronomy_cfg.get("source", "horizons")).lower()
+            if source not in ("horizons", "local"):
+                raise ValueError("astronomy.source deve essere 'horizons' o 'local'.")
             observations = {}
 
             for target in targets:
@@ -475,10 +588,16 @@ def run_mission_workflow(config_path):
                     raise ValueError(
                         f"Target Horizons non supportato da questo step: {target}"
                     )
-                rows = query_observations(
-                    target, latitude, longitude, start_utc,
-                    hours=hours, step=step_size,
-                )
+                if source == "local":
+                    rows = query_observations_local(
+                        target, latitude, longitude, start_utc,
+                        hours=hours, step_minutes=_step_minutes(step_size),
+                    )
+                else:
+                    rows = query_observations(
+                        target, latitude, longitude, start_utc,
+                        hours=hours, step=step_size,
+                    )
                 observations[names[target]] = [
                     {
                         "time_utc": row.time_utc,
@@ -557,23 +676,15 @@ def run_mission_workflow(config_path):
                         "Nessun timestamp comune tra le serie del Sole e della Terra."
                     )
 
-            step_match = re.fullmatch(
-                r"\s*(\d+(?:\.\d+)?)\s*([smhd])\s*",
-                str(step_size).lower(),
-            )
-            if not step_match:
+            step_seconds = _astronomy_step_seconds(step_size)
+            if step_seconds is None:
                 raise ValueError(
                     f"Passo astronomico non supportato per la diagnostica: {step_size!r}. "
                     "Usare un valore come 30m, 1h o 1d."
                 )
 
-            step_value = float(step_match.group(1))
-            step_unit = step_match.group(2)
-            step_seconds = step_value * {
-                "s": 1, "m": 60, "h": 3600, "d": 86400
-            }[step_unit]
-
             temporal_diagnostics = {
+                "expected_step_seconds": step_seconds,
                 "continuity_verified": False,
                 "gap_count": 0,
                 "unmatched_sun_timestamp_count": 0,
@@ -604,11 +715,17 @@ def run_mission_workflow(config_path):
                 "start_utc": start_utc.astimezone(timezone.utc).isoformat(),
                 "hours": hours,
                 "step": step_size,
+                "ephemeris_source": (
+                    local_ephemeris_provenance() if source == "local"
+                    else {"source": "NASA/JPL Horizons API", "quantities": "4,20"}),
                 "observations": observations,
                 "temporal_diagnostics": temporal_diagnostics,
                 "operational_windows": window_summary,
                 "limitations": [
-                    "Osservazioni geometriche apparenti da NASA/JPL Horizons.",
+                    ("Osservazioni geometriche apparenti da Skyfield + kernel SPICE locali "
+                     "(DE421, MOON_ME); concordanza con Horizons in reports/validation."
+                     if source == "local" else
+                     "Osservazioni geometriche apparenti da NASA/JPL Horizons."),
                     "Non includono ombreggiamento del terreno.",
                     "Non costituiscono un bilancio energetico o radio.",
                     "Frame e coordinate del sito non validati indipendentemente.",
@@ -622,6 +739,7 @@ def run_mission_workflow(config_path):
             return {
                 "status": "preliminary",
                 "site": site_name,
+                "ephemeris_source": source,
                 "targets": list(observations),
                 "observation_counts": {
                     name: len(rows) for name, rows in observations.items()
@@ -1432,6 +1550,32 @@ def run_mission_workflow(config_path):
             return result
         step("rover_energy", energy_assessment)
 
+    # Solar Energy Engine: produzione fotovoltaica e bilancio della batteria
+    # nel tempo, a partire dai report Astronomy, Illumination e Rover Energy.
+    solar_energy_cfg = config.get("solar_energy", {})
+    if solar_energy_cfg.get("enabled", False):
+        def solar_energy_budget():
+            astronomy_result = report["steps"].get("astronomy", {}).get("result", {})
+            illumination_result = report["steps"].get("illumination", {}).get("result", {})
+            astronomy_section = config.get("astronomy", {}) or {}
+            result = build_solar_energy_budget(
+                astronomy_path=astronomy_result.get("report_file"),
+                illumination_path=illumination_result.get("report_file"),
+                rover_energy_path=report["artifacts"].get("rover_energy"),
+                solar_config=solar_energy_cfg,
+                energy_config=config.get("energy", {}),
+                # Stesso passo e stesso default di collect_astronomy.
+                expected_step_seconds=_astronomy_step_seconds(
+                    astronomy_section.get("step", "1h")
+                ),
+                output_path=output_dir / solar_energy_cfg.get(
+                    "report_name", "solar_energy_budget.json"
+                ),
+            )
+            report["artifacts"]["solar_energy"] = result["report_file"]
+            return result
+        step("solar_energy", solar_energy_budget)
+
     fleet_cfg = config.get("fleet", {})
     if fleet_cfg.get("enabled", False):
         def allocate_fleet():
@@ -1443,6 +1587,69 @@ def run_mission_workflow(config_path):
             report["artifacts"]["fleet_allocation"] = result["output_path"]
             return result
         step("multi_rover", allocate_fleet)
+
+    fleet_dem_cfg = config.get("fleet_dem", {})
+    if fleet_dem_cfg.get("enabled", False):
+        def plan_fleet():
+            result = plan_fleet_on_dem(
+                resolve_project_path(fleet_dem_cfg["dem_path"]),
+                fleet_dem_cfg.get("rovers", []),
+                fleet_dem_cfg.get("tasks", []),
+                communications=fleet_dem_cfg.get("communications"),
+                output_path=output_dir / fleet_dem_cfg.get("report_name", "multi_rover_dem_plan.json"),
+            )
+            report["artifacts"]["fleet_dem_plan"] = result["output_path"]
+            return {k: result[k] for k in ("assignments", "unassigned_tasks", "rovers", "route_overlaps")
+                    if k != "assignments"} | {"assigned": len(result["assignments"]),
+                                               "report_file": result["output_path"]}
+        step("multi_rover_dem", plan_fleet)
+
+    # Aggregazione conservativa dei risultati scientifici disponibili.
+    decision_cfg = config.get("mission_decision", {})
+    if decision_cfg.get("enabled", True):
+        def generate_mission_decision():
+            astronomy_result = report["steps"].get("astronomy", {}).get("result", {})
+            illumination_result = report["steps"].get("illumination", {}).get("result", {})
+            visibility_result = report["steps"].get("visibility_analysis", {}).get("result", {})
+            energy_result = report["steps"].get("rover_energy", {}).get("result", {})
+
+            astronomy_path = astronomy_result.get("report_file")
+            illumination_path = illumination_result.get("report_file")
+            visibility_path = visibility_result.get("report_file")
+            energy_path = (
+                energy_result.get("output_path")
+                or report["artifacts"].get("rover_energy")
+            )
+
+            astronomy_cfg = config.get("astronomy", {})
+            # Stesso passo usato dallo step astronomy per interrogare Horizons
+            # (stesso default "1h" di collect_astronomy). Se non interpretabile
+            # si passa None: il Decision Engine dichiara la continuità non
+            # determinabile invece di inventare un intervallo.
+            expected_step_seconds = _astronomy_step_seconds(
+                astronomy_cfg.get("step", "1h")
+            )
+            result = build_mission_decision(
+                astronomy_path=astronomy_path,
+                illumination_path=illumination_path,
+                visibility_path=visibility_path,
+                energy_path=energy_path,
+                output_path=output_dir / decision_cfg.get(
+                    "report_name", "mission_decision_report.json"
+                ),
+                min_sun_elevation_deg=float(
+                    astronomy_cfg.get("min_sun_elevation_deg", 5.0)
+                ),
+                min_earth_elevation_deg=float(
+                    astronomy_cfg.get("min_earth_elevation_deg", 5.0)
+                ),
+                expected_step_seconds=expected_step_seconds,
+                solar_energy_path=report["artifacts"].get("solar_energy"),
+            )
+            report["artifacts"]["mission_decision"] = result["report_file"]
+            return result
+
+        step("mission_decision", generate_mission_decision)
 
     journal_cfg = config.get("journal", {})
     if journal_cfg.get("enabled", False):
@@ -1467,6 +1674,12 @@ def run_mission_workflow(config_path):
             report["artifacts"]["journal"] = str(journal.path)
             return {"events_appended": len(events), "events": events}
         step("local_journal", record_journal)
+
+    psystem_cfg = config.get("psystem", {})
+    if psystem_cfg.get("enabled", False):
+        def synchronize_psystem():
+            return _psystem_sync(psystem_cfg, report, run_id, output_dir)
+        step("psystem_sync", synchronize_psystem)
 
     # Verifica di coerenza degli artefatti effettivamente registrati.
     missing_artifacts = []
@@ -1592,6 +1805,7 @@ def run_mission_workflow(config_path):
                     "rover_plan", output_dir / "rover_plan.json"
                 ),
                 energy_assessment_path=report["artifacts"].get("rover_energy"),
+                solar_energy_path=report["artifacts"].get("solar_energy"),
                 journal_path=journal_cfg.get(
                     "path",
                     report["artifacts"].get(
@@ -1600,6 +1814,7 @@ def run_mission_workflow(config_path):
                 ),
                 journal_enabled=journal_cfg.get("enabled", False),
                 run_id=run_id,
+                psystem_view_path=report["artifacts"].get("psystem_view"),
             )
             selection_step = report["steps"].get("site_selection", {})
             selection_result = selection_step.get("result", {})

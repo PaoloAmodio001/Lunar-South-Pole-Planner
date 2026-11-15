@@ -141,9 +141,11 @@ def test_real_orchestrator_completed_with_errors(manager):
     assert final["state"] == "completed_with_errors"
     assert final["exit_code"] == 1
     steps = manager.status_payload(job["id"])["result"]["steps"]
-    assert steps == [{"name": "site_selection", "status": "failed",
-                      "error": "FileNotFoundError: DEM non trovato: "
-                               f"{PROJECT_ROOT / 'data/__f1_test_missing__.tif'}"}]
+    # Oltre allo step fallito l'orchestratore esegue sempre l'aggregazione decisionale.
+    assert steps[0] == {"name": "site_selection", "status": "failed",
+                        "error": "FileNotFoundError: DEM non trovato: "
+                                 f"{PROJECT_ROOT / 'data/__f1_test_missing__.tif'}"}
+    assert [s["name"] for s in steps[1:]] == ["mission_decision"]
     ranking = manager.status_payload(job["id"])["result"]["site_ranking"]
     assert ranking["available"] is False and "fallito" in ranking["reason"]
 

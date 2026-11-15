@@ -63,6 +63,9 @@ def test_orchestrator_records_final_journal_event_and_reports(tmp_path):
     assert main_report["final_journal_event"]["event_id"] == final_events[0]["event_id"]
     assert status_report["run_id"] == result["run_id"]
     assert status_report["psystem_journal"]["status"] == "available"
-    assert status_report["psystem_journal"]["current_run_event_lines"] == 1
+    # Eventi della corsa: uno per step eseguito (l'orchestratore esegue anche mission_decision)
+    # più l'evento finale; il report JSON viene aggiornato dopo l'evento finale.
+    run_events = [e for e in events if e["payload"].get("run_id") == result["run_id"]]
+    assert status_report["psystem_journal"]["current_run_event_lines"] == len(run_events) >= 2
     assert status_report["psystem_journal"]["remote_node_connected"] is False
-    assert "Eventi dell'esecuzione corrente: 1" in markdown
+    assert "Eventi dell'esecuzione corrente: " in markdown

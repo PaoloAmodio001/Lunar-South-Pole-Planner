@@ -1,0 +1,331 @@
+/* Sezione Educatori (pubblica). Usa solo i token di /ui/tokens.css; tutte le regole sono
+   confinate in #educatorHome, quindi non toccano Esploratore pubblico né Pianificatori.
+   Rollback: rimuovere il <link> a /ui/educator.css e lo <script> /ui/educator.js in index.html. */
+
+[data-ui="v2"] #educatorHome {
+  height: calc(100dvh - 52px); min-height: 0; overflow-y: auto; overflow-x: hidden;
+  padding: var(--ui-space-8) var(--ui-space-4) var(--ui-space-12);
+  background: radial-gradient(ellipse at 85% -10%, #13233A 0%, var(--ui-abyss) 55%);
+  color: var(--ui-text); font-size: var(--ui-text-14); line-height: var(--ui-leading-body);
+  scroll-behavior: smooth;
+}
+[data-ui="v2"] #educatorHome .edu-shell { max-width: 1240px; margin: 0 auto; }
+[data-ui="v2"] #educatorHome :is(h1, h2, h3, h4) { line-height: var(--ui-leading-title); }
+[data-ui="v2"] #educatorHome a { color: var(--ui-cyan); }
+[data-ui="v2"] #educatorHome code { font-size: .92em; color: var(--ui-text); background: var(--ui-anthracite-raised); padding: 0 4px; border-radius: var(--ui-radius-pill); }
+
+/* ---------- Hero ---------- */
+#educatorHome .edu-hero {
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--ui-space-8); align-items: center;
+  padding-bottom: var(--ui-space-6); border-bottom: 1px solid var(--ui-rule);
+}
+#educatorHome .edu-kicker { margin: 0 0 var(--ui-space-2); color: var(--ui-cyan); font-size: var(--ui-text-12); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+[data-ui="v2"] #educatorHome .edu-hero h1 { margin: 0 0 var(--ui-space-3); font-size: clamp(1.9rem, 4.5vw, 3.1rem); }
+#educatorHome .edu-lead { margin: 0; max-width: 62ch; color: var(--ui-text-muted); font-size: var(--ui-text-17); }
+#educatorHome .edu-pills { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); margin: var(--ui-space-4) 0 0; padding: 0; list-style: none; }
+#educatorHome .edu-pills li { padding: 3px 10px; border: 1px solid var(--ui-rule); border-radius: 999px; color: var(--ui-text); font-size: var(--ui-text-12); background: var(--ui-anthracite); }
+#educatorHome .edu-hero-art { width: 100%; height: auto; border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel); }
+
+/* ---------- Livello ---------- */
+#educatorHome .edu-level { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-2); margin: var(--ui-space-4) 0; }
+#educatorHome .edu-level > span { margin-right: var(--ui-space-2); color: var(--ui-text-muted); font-size: var(--ui-text-12); font-weight: 600; }
+#educatorHome .edu-level button {
+  display: flex; flex-direction: column; align-items: flex-start; padding: 6px 12px; min-height: 44px;
+  border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-control); background: var(--ui-anthracite);
+  color: var(--ui-text); font-weight: 600; cursor: pointer;
+}
+#educatorHome .edu-level button small { color: var(--ui-text-muted); font-weight: 400; font-size: var(--ui-text-12); }
+#educatorHome .edu-level button[aria-pressed="true"] { border-color: var(--ui-cyan); box-shadow: inset 0 -2px 0 var(--ui-cyan); background: var(--ui-anthracite-raised); }
+
+/* Contenuti mostrati per livello */
+#educatorHome[data-level="1"] [data-level-min="2"],
+#educatorHome[data-level="1"] [data-level-min="3"],
+#educatorHome[data-level="2"] [data-level-min="3"] { display: none !important; }
+
+/* ---------- Layout capitoli ---------- */
+#educatorHome .edu-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: var(--ui-space-8); align-items: start; }
+#educatorHome .edu-nav { position: sticky; top: 0; padding-top: var(--ui-space-2); }
+#educatorHome .edu-nav ol { margin: 0; padding: 0; list-style: none; border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel); overflow: hidden; background: var(--ui-anthracite); }
+#educatorHome .edu-nav li + li { border-top: 1px solid var(--ui-rule); }
+#educatorHome .edu-nav button {
+  display: flex; gap: var(--ui-space-3); align-items: baseline; width: 100%; padding: 11px 14px; min-height: 44px;
+  border: 0; background: transparent; color: var(--ui-text-muted); text-align: left; font-size: var(--ui-text-14); cursor: pointer;
+}
+#educatorHome .edu-nav button span { color: var(--ui-inactive); font-size: var(--ui-text-12); font-weight: 600; }
+#educatorHome .edu-nav button:hover { background: var(--ui-anthracite-raised); color: var(--ui-text); }
+#educatorHome .edu-nav button[aria-current="step"] { color: var(--ui-text); background: var(--ui-anthracite-raised); box-shadow: inset 3px 0 0 var(--ui-cyan); }
+#educatorHome .edu-nav button[aria-current="step"] span { color: var(--ui-cyan); }
+#educatorHome .edu-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--ui-space-4); }
+#educatorHome .edu-legend p { width: 100%; margin: 0; color: var(--ui-text-muted); font-size: var(--ui-text-12); }
+
+#educatorHome .edu-chapter { animation: eduFade .25s ease-out; }
+@keyframes eduFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#educatorHome .edu-chapter-num { margin: 0; color: var(--ui-cyan); font-size: var(--ui-text-12); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+#educatorHome .edu-chapter > h2 { margin: var(--ui-space-1) 0 var(--ui-space-3); font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 650; font-stretch: var(--ui-width-expanded); }
+#educatorHome .edu-intro { max-width: 70ch; margin: 0 0 var(--ui-space-6); color: var(--ui-text-muted); font-size: var(--ui-text-17); }
+
+/* ---------- Badge certezza ---------- */
+#educatorHome .ev { display: inline-block; margin: 0 4px 4px 0; padding: 1px 8px; border-radius: 999px; font-size: var(--ui-text-12); font-weight: 600; border: 1px solid; white-space: nowrap; }
+#educatorHome .ev-ok { color: var(--ui-go); border-color: color-mix(in srgb, var(--ui-go) 55%, transparent); }
+#educatorHome .ev-hyp { color: var(--ui-caution); border-color: color-mix(in srgb, var(--ui-caution) 55%, transparent); }
+#educatorHome .ev-plan { color: var(--ui-cyan); border-color: color-mix(in srgb, var(--ui-cyan) 55%, transparent); }
+
+/* ---------- Card ---------- */
+#educatorHome .edu-cards { display: grid; gap: var(--ui-space-3); margin-bottom: var(--ui-space-6); }
+#educatorHome .edu-cards-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#educatorHome .edu-cards-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#educatorHome .edu-card {
+  display: flex; flex-direction: column; padding: var(--ui-space-4) var(--ui-space-4) var(--ui-space-4);
+  border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel); background: var(--ui-anthracite);
+}
+#educatorHome .edu-card h3 { margin: var(--ui-space-1) 0 var(--ui-space-2); font-size: var(--ui-text-17); font-weight: 600; }
+#educatorHome .edu-card p, #educatorHome .edu-card li, #educatorHome .edu-card dd { color: var(--ui-text-muted); }
+#educatorHome .edu-card p { margin: 0 0 var(--ui-space-2); }
+#educatorHome .edu-card ul, #educatorHome .edu-card ol { margin: 0 0 var(--ui-space-3); padding-left: 1.2em; }
+#educatorHome .edu-card > button { margin-top: auto; align-self: flex-start; }
+#educatorHome .edu-card-accent { border-color: color-mix(in srgb, var(--ui-cyan) 45%, var(--ui-rule)); }
+#educatorHome .edu-icon { color: var(--ui-cyan); font-size: 22px; line-height: 1; }
+#educatorHome .edu-tag { color: var(--ui-cyan); font-size: var(--ui-text-12); font-weight: 600; }
+#educatorHome .edu-where { margin-top: auto !important; padding-top: var(--ui-space-2); border-top: 1px dashed var(--ui-rule); font-size: var(--ui-text-12); color: var(--ui-sun) !important; }
+#educatorHome .edu-paths dl { display: grid; grid-template-columns: auto 1fr; gap: 4px var(--ui-space-3); margin: 0 0 var(--ui-space-4); font-size: var(--ui-text-14); }
+#educatorHome .edu-paths dt { color: var(--ui-text); font-weight: 600; }
+#educatorHome .edu-paths dd { margin: 0; }
+
+/* ---------- Callout, approfondimenti, avvisi ---------- */
+#educatorHome .edu-callout, #educatorHome .edu-deep {
+  margin: 0 0 var(--ui-space-6); padding: var(--ui-space-4); border-radius: var(--ui-radius-panel);
+  background: var(--ui-anthracite); border: 1px solid var(--ui-rule); border-left: 3px solid var(--ui-sun);
+}
+#educatorHome .edu-deep { border-left-color: var(--ui-cyan); }
+#educatorHome :is(.edu-callout, .edu-deep) h3 { margin: 0 0 var(--ui-space-2); font-size: var(--ui-text-17); }
+#educatorHome :is(.edu-callout, .edu-deep) :is(p, li) { color: var(--ui-text-muted); margin: 0 0 4px; }
+#educatorHome .edu-steps { margin: 0; padding-left: 1.2em; }
+#educatorHome .edu-notice { max-width: 80ch; margin: 0 0 var(--ui-space-4); padding: var(--ui-space-3); border-radius: var(--ui-radius-control); background: color-mix(in srgb, var(--ui-caution) 10%, transparent); border: 1px solid color-mix(in srgb, var(--ui-caution) 40%, transparent); color: var(--ui-text); }
+#educatorHome .edu-small { color: var(--ui-text-muted); font-size: var(--ui-text-12); }
+#educatorHome .edu-sources { padding-left: 1.2em; }
+
+/* ---------- Figure ---------- */
+#educatorHome .edu-figure { margin: 0; }
+#educatorHome .edu-figure svg { display: block; width: 100%; height: auto; border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel); background: var(--ui-abyss); }
+#educatorHome .edu-figure figcaption { margin-top: var(--ui-space-2); color: var(--ui-text-muted); font-size: var(--ui-text-12); }
+#educatorHome .edu-split { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: var(--ui-space-6); align-items: start; margin-bottom: var(--ui-space-6); }
+#educatorHome .edu-split > .edu-figure { position: sticky; top: var(--ui-space-2); }
+#educatorHome .edu-facts { display: grid; gap: var(--ui-space-3); }
+#educatorHome .edu-fact { padding: var(--ui-space-3) var(--ui-space-4); border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel); background: var(--ui-anthracite); }
+#educatorHome .edu-fact h3 { margin: 2px 0 4px; font-size: var(--ui-text-17); }
+#educatorHome .edu-fact p { margin: 0; color: var(--ui-text-muted); }
+#educatorHome .edu-diagrams { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ui-space-4); margin-bottom: var(--ui-space-6); }
+#educatorHome .edu-bridge { margin-bottom: var(--ui-space-6); }
+
+/* ---------- Strumenti e form ---------- */
+#educatorHome .edu-tool, #educatorHome .edu-lab-live, #educatorHome .edu-matrix, #educatorHome .edu-rubric {
+  margin: 0 0 var(--ui-space-6); padding: var(--ui-space-4); border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel); background: var(--ui-anthracite);
+}
+#educatorHome .edu-lab-live { border-color: color-mix(in srgb, var(--ui-cyan) 45%, var(--ui-rule)); }
+#educatorHome :is(.edu-tool, .edu-lab-live, .edu-matrix, .edu-rubric) h3 { margin: 0 0 var(--ui-space-2); font-size: var(--ui-text-17); }
+#educatorHome .edu-tool { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: var(--ui-space-6); align-items: center; }
+#educatorHome .edu-tool svg { width: 100%; height: auto; }
+#educatorHome .edu-tool p { color: var(--ui-text-muted); margin: 0 0 var(--ui-space-3); }
+#educatorHome .edu-result { font-size: var(--ui-text-17); color: var(--ui-text) !important; }
+#educatorHome .edu-result strong { color: var(--ui-sun); }
+#educatorHome .edu-form { display: grid; gap: var(--ui-space-3); align-items: end; margin-bottom: var(--ui-space-3); }
+#educatorHome .edu-form-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#educatorHome .edu-form-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) auto; }
+#educatorHome .edu-form label, #educatorHome .edu-weights label { display: flex; flex-direction: column; gap: 4px; color: var(--ui-text-muted); font-size: var(--ui-text-12); font-weight: 600; }
+#educatorHome :is(.edu-form, .edu-matrix) input:not([type="range"]) {
+  min-height: 36px; padding: 6px 8px; border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-control);
+  background: var(--ui-anthracite-raised); color: var(--ui-text); font-size: var(--ui-text-14);
+}
+#educatorHome input[type="range"] { accent-color: var(--ui-cyan); width: 100%; }
+#educatorHome output { color: var(--ui-text); }
+#educatorHome :is(.edu-primary, .edu-secondary) {
+  min-height: 40px; padding: 8px 14px; border-radius: var(--ui-radius-control); font-size: var(--ui-text-14); font-weight: 600; cursor: pointer;
+}
+#educatorHome .edu-primary { background: var(--ui-blue); border: 1px solid var(--ui-blue); color: #fff; }
+#educatorHome .edu-secondary { background: transparent; border: 1px solid var(--ui-rule); color: var(--ui-text); }
+#educatorHome .edu-secondary:hover { border-color: var(--ui-cyan); }
+#educatorHome :is(.edu-primary, .edu-secondary):disabled { opacity: .55; cursor: progress; }
+#educatorHome .edu-status { margin: 0 0 var(--ui-space-3); color: var(--ui-text-muted); }
+#educatorHome .edu-status[data-state="error"] { color: var(--ui-nogo); }
+#educatorHome .edu-status[data-state="busy"] { color: var(--ui-caution); }
+#educatorHome .edu-status[data-state="ok"] { color: var(--ui-go); }
+#educatorHome .edu-actions { margin-top: var(--ui-space-3); }
+#educatorHome .edu-weights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ui-space-4); margin: var(--ui-space-3) 0; }
+#educatorHome .edu-matrix input[type="number"] { width: 64px; }
+#educatorHome .edu-matrix .edu-auto { box-shadow: inset 0 -2px 0 var(--ui-sun); }
+
+/* ---------- Tabelle ---------- */
+#educatorHome .edu-table-wrap { overflow-x: auto; }
+#educatorHome .edu-table { width: 100%; border-collapse: collapse; font-size: var(--ui-text-14); }
+#educatorHome .edu-table :is(th, td) { padding: 8px 10px; border-bottom: 1px solid var(--ui-rule); text-align: left; vertical-align: middle; }
+#educatorHome .edu-table thead th { color: var(--ui-text-muted); font-size: var(--ui-text-12); font-weight: 600; white-space: nowrap; }
+#educatorHome .edu-table tbody th { font-weight: 600; }
+#educatorHome .edu-table td { color: var(--ui-text-muted); }
+#educatorHome .edu-table .edu-num { color: var(--ui-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#educatorHome .edu-table tr.edu-best th { color: var(--ui-go); }
+#educatorHome .edu-table tr.edu-best .edu-score { color: var(--ui-go); font-weight: 700; }
+#educatorHome .edu-spark { display: block; width: 160px; height: 40px; }
+#educatorHome .edu-worksheet td { height: 64px; min-width: 120px; }
+#educatorHome .edu-lab ol { padding-left: 1.2em; }
+#educatorHome .edu-lab-wide { margin-bottom: var(--ui-space-6); }
+
+/* ---------- Attività (accordion) ---------- */
+#educatorHome .edu-activity { margin: 0 0 var(--ui-space-3); border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel); background: var(--ui-anthracite); }
+#educatorHome .edu-activity summary { display: flex; flex-wrap: wrap; gap: var(--ui-space-3); align-items: baseline; padding: var(--ui-space-3) var(--ui-space-4); font-size: var(--ui-text-17); font-weight: 600; cursor: pointer; list-style-position: inside; }
+#educatorHome .edu-activity[open] summary { border-bottom: 1px solid var(--ui-rule); }
+#educatorHome .edu-activity-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--ui-rule); }
+#educatorHome .edu-activity-grid section { padding: var(--ui-space-3) var(--ui-space-4); background: var(--ui-anthracite); }
+#educatorHome .edu-activity-grid h4 { margin: 0 0 6px; color: var(--ui-cyan); font-size: var(--ui-text-12); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+#educatorHome .edu-activity-grid :is(p, li) { margin: 0 0 4px; color: var(--ui-text-muted); }
+#educatorHome .edu-activity-grid :is(ul, ol) { margin: 0; padding-left: 1.2em; }
+#educatorHome .edu-roles strong { color: var(--ui-text); }
+
+/* ---------- Pager e footer ---------- */
+#educatorHome .edu-pager { display: flex; justify-content: space-between; gap: var(--ui-space-3); margin-top: var(--ui-space-6); padding-top: var(--ui-space-4); border-top: 1px solid var(--ui-rule); }
+#educatorHome .edu-pager button[hidden] { display: none; }
+#educatorHome .edu-pager #eduNext { margin-left: auto; }
+#educatorHome .edu-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--ui-space-3); margin-top: var(--ui-space-8); padding-top: var(--ui-space-4); border-top: 1px solid var(--ui-rule); }
+[data-ui="v2"] #educatorHome .edu-footer .educator-note { margin: 0; max-width: 70ch; font-size: var(--ui-text-12); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  #educatorHome .edu-cards-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #educatorHome .edu-form-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #educatorHome .edu-activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #educatorHome .edu-split { grid-template-columns: 1fr; }
+  #educatorHome .edu-split > .edu-figure { position: static; max-width: 420px; }
+}
+@media (max-width: 1000px) {
+  [data-ui="v2"] #educatorHome { height: auto; overflow: visible; }
+  #educatorHome .edu-layout { grid-template-columns: 1fr; gap: var(--ui-space-4); }
+  #educatorHome .edu-nav { position: sticky; top: 0; z-index: 2; margin: 0 -16px; padding: var(--ui-space-2) 16px; background: var(--ui-abyss); border-bottom: 1px solid var(--ui-rule); }
+  #educatorHome .edu-nav ol { display: flex; overflow-x: auto; border-radius: var(--ui-radius-control); scrollbar-width: thin; }
+  #educatorHome .edu-nav li { flex: none; }
+  #educatorHome .edu-nav li + li { border-top: 0; border-left: 1px solid var(--ui-rule); }
+  #educatorHome .edu-nav button { white-space: nowrap; }
+  #educatorHome .edu-nav button[aria-current="step"] { box-shadow: inset 0 -3px 0 var(--ui-cyan); }
+  #educatorHome .edu-legend { display: none; }
+}
+@media (max-width: 760px) {
+  [data-ui="v2"] #educatorHome { padding: var(--ui-space-6) 16px var(--ui-space-8); }
+  #educatorHome .edu-hero { grid-template-columns: 1fr; gap: var(--ui-space-4); }
+  #educatorHome :is(.edu-cards-3, .edu-cards-2, .edu-diagrams, .edu-activity-grid, .edu-form-2) { grid-template-columns: 1fr; }
+  #educatorHome .edu-weights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #educatorHome .edu-tool { grid-template-columns: 1fr; }
+  #educatorHome .edu-level button { flex: 1 1 30%; }
+  #educatorHome .edu-pager { flex-direction: column; }
+  #educatorHome .edu-pager #eduNext { margin-left: 0; }
+}
+@media (max-width: 480px) {
+  #educatorHome .edu-form-4 { grid-template-columns: 1fr; }
+  #educatorHome .edu-level > span { width: 100%; }
+}
+
+/* ---------- Stampa: solo il capitolo corrente, su fondo bianco ---------- */
+@media print {
+  body.educator-mode > :not(#educatorHome) { display: none !important; }
+  [data-ui="v2"] #educatorHome { height: auto; overflow: visible; padding: 0; background: #fff; color: #000; }
+  #educatorHome :is(.edu-hero-art, .edu-level, .edu-nav, .edu-pager, .edu-footer, .edu-actions, .edu-card > button, form) { display: none !important; }
+  #educatorHome .edu-layout { display: block; }
+  #educatorHome :is(.edu-card, .edu-fact, .edu-callout, .edu-deep, .edu-tool, .edu-lab-live, .edu-matrix, .edu-rubric, .edu-activity, .edu-activity-grid section) { background: #fff !important; border-color: #999 !important; color: #000; break-inside: avoid; }
+  #educatorHome :is(p, li, dd, td, th, .edu-intro, h1, h2, h3, h4, .edu-small) { color: #000 !important; }
+  #educatorHome .edu-activity:not([open]) > :not(summary) { display: block; }
+  #educatorHome .edu-chapter { animation: none; }
+}
+
+/* ---------- FIX LAYOUT EDUCATORS ---------- */
+
+/* Hero: titolo e illustrazione sempre in colonne indipendenti */
+[data-ui="v2"] #educatorHome .edu-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+    align-items: center;
+    gap: 32px;
+    min-width: 0;
+    padding: 20px 0 28px;
+    overflow: hidden;
+}
+
+#educatorHome .edu-hero > * {
+    position: relative;
+    min-width: 0;
+}
+
+#educatorHome .edu-hero-art {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 230px;
+    max-height: 230px;
+    object-fit: cover;
+    margin: 0;
+}
+
+/* Selettore livelli: sempre sotto l'introduzione */
+#educatorHome .edu-level {
+    position: relative !important;
+    display: flex;
+    clear: both;
+    width: 100%;
+    min-height: 58px;
+    margin: 24px 0 28px;
+    padding: 12px 0;
+    align-items: center;
+    z-index: 1;
+    background: transparent;
+}
+
+/* Navigazione e contenuti senza sovrapposizioni */
+#educatorHome .edu-layout {
+    position: relative;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+    clear: both;
+}
+
+#educatorHome .edu-nav,
+#educatorHome .edu-chapter {
+    position: relative;
+    min-width: 0;
+}
+
+#educatorHome .edu-chapter {
+    overflow-wrap: break-word;
+}
+
+#educatorHome .edu-cards > * {
+    min-width: 0;
+}
+
+/* Tablet */
+@media (max-width: 1000px) {
+    [data-ui="v2"] #educatorHome .edu-hero {
+        grid-template-columns: 1fr 0.8fr;
+        gap: 20px;
+    }
+
+    #educatorHome .edu-hero-art {
+        height: 190px;
+        max-height: 190px;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 760px) {
+    [data-ui="v2"] #educatorHome .edu-hero {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    #educatorHome .edu-hero-art {
+        height: 190px;
+        max-height: 190px;
+    }
+
+    #educatorHome .edu-level {
+        margin: 18px 0 22px;
+    }
+}

@@ -38,3 +38,28 @@ scripts/rasterio
 reports/web_runs/
 /json
 /sys
+
+# --- Repository update 2026-11-15 (Space Apps 2026 preparation) ---
+# Secrets and key material (P-System local cluster writes Ed25519/TLS keys here)
+*.key
+*.pem
+reports/psystem_local/
+# Local databases / runtime state (the auth store lives outside the repo,
+# in ~/.config/lunar-mission-control or $LUNAR_AUTH_DIR)
+*.db
+*.sqlite
+*.sqlite3
+# Editor / OS noise
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
+# Video production work-in-progress (Blender scripts with a hard-coded local path,
+# generated data/renders, fonts and an image whose provenance is not recorded).
+# Kept on disk; not part of the published repository or of the submission.
+video/
+# Presentation drafts at the repository root, kept locally pending an explicit
+# decision by the author (the official deck is in submission/)
+/LUNAR_P_SYSTEM_PRESENTATION.pdf
+/P-System Space Group*.pptx

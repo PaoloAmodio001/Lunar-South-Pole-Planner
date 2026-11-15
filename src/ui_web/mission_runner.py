@@ -56,11 +56,11 @@ ALLOWED_WRITE_ROOTS = ("reports",)
 ALWAYS_RUN_SECTIONS = {
     "descent_hazard_detection", "site_selection", "lola_lroc_quality", "rover_path",
 }
-DEFAULT_ON_SECTIONS = {"mission_report"}
+DEFAULT_ON_SECTIONS = {"mission_report", "mission_decision"}
 OPT_IN_SECTIONS = {
     "astronomy", "illumination", "local_site_analysis", "confidence_validation",
     "data_quality", "horizon_analysis", "visibility_analysis", "site_assessment",
-    "lunar_geometry", "descent_risk_map", "energy", "fleet", "journal",
+    "lunar_geometry", "descent_risk_map", "energy", "solar_energy", "fleet", "journal",
 }
 KNOWN_TOP_LEVEL = ALWAYS_RUN_SECTIONS | DEFAULT_ON_SECTIONS | OPT_IN_SECTIONS | {"output_dir"}
 

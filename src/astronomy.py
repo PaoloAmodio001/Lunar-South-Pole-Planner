@@ -31,7 +31,46 @@ SITES = {
 
 
 class AstronomyError(RuntimeError):
-    """Horizons request or parsing error."""
+    """Horizons request or parsing error.
+
+    ``kind`` classifica la causa, così che la Web UI possa distinguere un
+    servizio NASA/JPL non raggiungibile da una risposta non valida:
+
+    - ``timeout``            nessuna risposta entro TIMEOUT secondi;
+    - ``dns``                nome ssd.jpl.nasa.gov non risolto (rete/DNS locale);
+    - ``connection``         connessione rifiutata/interrotta, proxy, TLS;
+    - ``http``               Horizons ha risposto con uno stato HTTP di errore;
+    - ``upstream_error``     Horizons ha risposto ma segnala un errore nella richiesta;
+    - ``invalid_response``   risposta non JSON o senza blocco effemeridi utilizzabile;
+    - ``data``               dati incoerenti (es. nessun timestamp comune).
+    """
+
+    def __init__(self, message, kind="invalid_response", http_status=None):
+        super().__init__(message)
+        self.kind = kind
+        self.http_status = http_status
+
+
+def _classify_request_error(exc, timeout=TIMEOUT):
+    """Restituisce (kind, messaggio leggibile) per un'eccezione di requests."""
+    text = str(exc)
+    if isinstance(exc, requests.Timeout):
+        return "timeout", f"NASA/JPL Horizons non ha risposto entro {timeout:g} s"
+    if isinstance(exc, requests.ConnectionError):
+        lowered = text.lower()
+        if any(token in lowered for token in (
+                "name or service not known", "nodename nor servname",
+                "temporary failure in name resolution", "getaddrinfo failed",
+                "name resolution", "no address associated")):
+            return "dns", ("Risoluzione DNS di ssd.jpl.nasa.gov non riuscita: "
+                           "verificare la connessione Internet o il DNS")
+        if isinstance(exc, (requests.exceptions.SSLError, requests.exceptions.ProxyError)):
+            return "connection", f"Connessione sicura/proxy verso Horizons non riuscita: {text}"
+        return "connection", f"Connessione a NASA/JPL Horizons non riuscita: {text}"
+    if isinstance(exc, requests.HTTPError):
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+        return "http", f"NASA/JPL Horizons ha risposto HTTP {status}"
+    return "connection", f"Richiesta a Horizons non riuscita: {text}"
 
 
 @dataclass
@@ -91,17 +130,32 @@ def query_observations(
             HORIZONS_URL, params=params, timeout=TIMEOUT
         )
         response.raise_for_status()
+    except requests.RequestException as exc:
+        kind, message = _classify_request_error(exc)
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+        raise AstronomyError(message, kind=kind, http_status=status) from exc
+
+    try:
         payload = response.json()
-    except (requests.RequestException, ValueError) as exc:
-        raise AstronomyError(f"Horizons request failed: {exc}") from exc
+    except ValueError as exc:
+        raise AstronomyError(
+            "Risposta di Horizons non in formato JSON "
+            f"(Content-Type: {response.headers.get('Content-Type', 'n/d')})",
+            kind="invalid_response",
+        ) from exc
+    if not isinstance(payload, dict):
+        raise AstronomyError("Risposta di Horizons con struttura inattesa.",
+                             kind="invalid_response")
 
     if payload.get("error"):
-        raise AstronomyError(str(payload["error"]))
+        raise AstronomyError(f"Horizons segnala un errore: {payload['error']}",
+                             kind="upstream_error")
 
     result = payload.get("result", "")
-    if "$$SOE" not in result or "$$EOE" not in result:
+    if not isinstance(result, str) or "$$SOE" not in result or "$$EOE" not in result:
         raise AstronomyError(
-            "Horizons did not return an ephemeris data block."
+            "Horizons non ha restituito un blocco di effemeridi ($$SOE/$$EOE).",
+            kind="invalid_response",
         )
 
     data = result.split("$$SOE", 1)[1].split("$$EOE", 1)[0]
@@ -169,10 +223,37 @@ def query_observations(
 
     if not observations:
         raise AstronomyError(
-            "Horizons returned no usable numeric observations."
+            "Horizons non ha restituito osservazioni numeriche utilizzabili.",
+            kind="invalid_response",
         )
 
     return observations
+
+
+def probe_horizons(timeout: float = 10.0) -> dict:
+    """Verifica leggera della raggiungibilità dell'API Horizons.
+
+    Esegue una richiesta senza generazione di effemeridi (MAKE_EPHEM=NO).
+    Non restituisce né produce dati astronomici: solo lo stato del servizio.
+    """
+    checked = datetime.now(timezone.utc).isoformat()
+    params = {"format": "json", "COMMAND": "'10'", "OBJ_DATA": "NO", "MAKE_EPHEM": "NO"}
+    try:
+        response = requests.get(HORIZONS_URL, params=params, timeout=timeout)
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict) or ("result" not in payload and "error" not in payload):
+            return {"available": False, "kind": "invalid_response", "checked_utc": checked,
+                    "detail": "Risposta di Horizons con struttura inattesa."}
+        version = (payload.get("signature") or {}).get("version")
+        return {"available": True, "kind": "ok", "checked_utc": checked,
+                "detail": "NASA/JPL Horizons raggiungibile.", "api_version": version}
+    except requests.RequestException as exc:
+        kind, message = _classify_request_error(exc, timeout)
+        return {"available": False, "kind": kind, "checked_utc": checked, "detail": message}
+    except ValueError:
+        return {"available": False, "kind": "invalid_response", "checked_utc": checked,
+                "detail": "Risposta di Horizons non in formato JSON."}
 
 
 def main():

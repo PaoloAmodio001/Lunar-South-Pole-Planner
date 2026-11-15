@@ -1,0 +1,178 @@
+/* 2026-11-15 · Pagine di login e dashboard MISSION PLANNERS.
+   Usa solo i token di tokens.css e la barra di shell.css: stessa identità visiva di Mission Control. */
+
+[data-ui="v2"] body.portal {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--ui-abyss);
+  color: var(--ui-text);
+  font-size: var(--ui-text-14);
+  line-height: var(--ui-leading-body);
+}
+[data-ui="v2"] body.portal a { color: var(--ui-cyan); }
+[data-ui="v2"] body.portal code {
+  font-family: ui-monospace, "DejaVu Sans Mono", monospace;
+  font-size: .92em;
+  background: var(--ui-anthracite-raised);
+  padding: 1px 5px;
+  border-radius: var(--ui-radius-pill);
+  word-break: break-all;
+}
+[data-ui="v2"] .portal-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--ui-space-8) var(--ui-space-4) var(--ui-space-12);
+}
+[data-ui="v2"] .eyebrow {
+  margin: 0 0 var(--ui-space-2);
+  color: var(--ui-cyan);
+  font-size: var(--ui-text-12);
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+[data-ui="v2"] .portal-main h1 {
+  margin: 0 0 var(--ui-space-2);
+  font-size: var(--ui-text-34);
+  font-weight: 650;
+  font-stretch: var(--ui-width-expanded);
+  line-height: var(--ui-leading-title);
+}
+[data-ui="v2"] .lede { margin: 0; color: var(--ui-text-muted); max-width: 64ch; }
+
+/* ---------- Pannelli ---------- */
+[data-ui="v2"] .portal-panel {
+  background: var(--ui-anthracite);
+  border: 1px solid var(--ui-rule);
+  border-radius: var(--ui-radius-panel);
+  padding: var(--ui-space-6);
+}
+[data-ui="v2"] .section-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--ui-space-4);
+  margin: var(--ui-space-12) 0 var(--ui-space-4);
+  border-bottom: 1px solid var(--ui-rule);
+  padding-bottom: var(--ui-space-2);
+}
+[data-ui="v2"] .section-head h2 {
+  margin: 0; font-size: var(--ui-text-17); letter-spacing: .14em; font-weight: 700;
+}
+[data-ui="v2"] .section-head p { margin: 0; color: var(--ui-text-muted); font-size: var(--ui-text-12); }
+
+/* ---------- Schede dei planner ---------- */
+[data-ui="v2"] .planner-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ui-space-4);
+}
+[data-ui="v2"] .planner-card {
+  display: flex; flex-direction: column; gap: var(--ui-space-3);
+  border-top: 3px solid var(--accent, var(--ui-cyan));
+}
+[data-ui="v2"] .planner-card h3 {
+  margin: 0; font-size: var(--ui-text-24); font-weight: 650; font-stretch: var(--ui-width-expanded);
+}
+[data-ui="v2"] .planner-tag {
+  align-self: flex-start;
+  color: var(--accent, var(--ui-cyan));
+  border: 1px solid currentColor;
+  border-radius: var(--ui-radius-pill);
+  padding: 2px 8px;
+  font-size: var(--ui-text-12);
+  letter-spacing: .08em;
+}
+[data-ui="v2"] .planner-card p { margin: 0; color: var(--ui-text-muted); }
+[data-ui="v2"] .planner-card ul { margin: 0; padding-left: 1.1em; color: var(--ui-text); }
+[data-ui="v2"] .planner-card li { margin: 2px 0; }
+[data-ui="v2"] .planner-meta {
+  display: flex; align-items: center; gap: var(--ui-space-2);
+  font-size: var(--ui-text-12); color: var(--ui-text-muted);
+}
+[data-ui="v2"] .planner-actions { margin-top: auto; display: flex; gap: var(--ui-space-2); flex-wrap: wrap; }
+
+[data-ui="v2"] .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 40px; padding: 8px 16px;
+  border-radius: var(--ui-radius-control);
+  border: 1px solid var(--ui-rule);
+  background: transparent; color: var(--ui-text);
+  font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+[data-ui="v2"] .btn:hover { border-color: var(--ui-cyan); }
+[data-ui="v2"] .btn-primary { background: var(--ui-blue); border-color: var(--ui-blue); color: #fff; }
+[data-ui="v2"] .btn-primary:hover { filter: brightness(1.1); border-color: var(--ui-blue); }
+[data-ui="v2"] .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+
+/* ---------- Stato dei servizi ---------- */
+[data-ui="v2"] .service-list {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ui-space-4);
+  margin: 0; padding: 0; list-style: none;
+}
+[data-ui="v2"] .service-list li { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+[data-ui="v2"] .service-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+[data-ui="v2"] .service-detail { color: var(--ui-text-muted); font-size: var(--ui-text-12); overflow-wrap: anywhere; }
+[data-ui="v2"] .status-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--ui-inactive); flex: none;
+}
+[data-ui="v2"] .status-dot[data-state="ok"] { background: var(--ui-go); }
+[data-ui="v2"] .status-dot[data-state="busy"] { background: var(--ui-caution); }
+[data-ui="v2"] .status-dot[data-state="error"] { background: var(--ui-nogo); }
+[data-ui="v2"] .service-actions { margin-top: var(--ui-space-4); display: flex; gap: var(--ui-space-3); align-items: center; flex-wrap: wrap; }
+[data-ui="v2"] .service-actions small { color: var(--ui-text-muted); }
+
+[data-ui="v2"] .portal-foot {
+  margin-top: var(--ui-space-12); color: var(--ui-inactive); font-size: var(--ui-text-12);
+}
+
+/* ---------- Login ---------- */
+[data-ui="v2"] .login-wrap {
+  min-height: calc(100dvh - 52px);
+  display: grid; place-items: center;
+  padding: var(--ui-space-8) var(--ui-space-4);
+}
+[data-ui="v2"] .login-card { width: 100%; max-width: 420px; }
+[data-ui="v2"] .login-card h1 { font-size: var(--ui-text-24); }
+[data-ui="v2"] .login-form { display: grid; gap: var(--ui-space-3); margin-top: var(--ui-space-6); }
+[data-ui="v2"] .login-form label { display: grid; gap: 6px; font-size: var(--ui-text-12); color: var(--ui-text-muted); letter-spacing: .04em; }
+[data-ui="v2"] .login-form input {
+  font: inherit; font-size: var(--ui-text-14); color: var(--ui-text);
+  background: var(--ui-anthracite-raised); border: 1px solid var(--ui-rule);
+  border-radius: var(--ui-radius-control); padding: 10px 12px; width: 100%; box-sizing: border-box;
+}
+[data-ui="v2"] .login-form input:focus { border-color: var(--ui-cyan); }
+[data-ui="v2"] .login-notice {
+  margin: var(--ui-space-3) 0 0; padding: 10px 12px;
+  border: 1px solid var(--ui-rule); border-left: 3px solid var(--ui-cyan);
+  border-radius: var(--ui-radius-control); background: var(--ui-anthracite-raised);
+  font-size: var(--ui-text-12);
+}
+[data-ui="v2"] .login-notice[data-kind="error"] { border-left-color: var(--ui-nogo); }
+[data-ui="v2"] .login-notice[data-kind="warn"] { border-left-color: var(--ui-caution); }
+[data-ui="v2"] .login-notice[data-kind="ok"] { border-left-color: var(--ui-go); }
+/* Riquadro credenziali demo: inserito dal server solo in ambiente locale/demo. */
+[data-ui="v2"] .login-demo {
+  margin: var(--ui-space-4) 0 0; padding: 10px 12px;
+  border: 1px dashed var(--ui-rule); border-radius: var(--ui-radius-control);
+  background: var(--ui-anthracite-raised);
+  font-size: var(--ui-text-12); color: var(--ui-text-muted); line-height: 1.6;
+}
+[data-ui="v2"] .login-demo-title { margin: 0 0 4px; color: var(--ui-text); font-weight: 600; letter-spacing: .04em; }
+[data-ui="v2"] .login-demo dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; }
+[data-ui="v2"] .login-demo dt { margin: 0; }
+[data-ui="v2"] .login-demo dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+[data-ui="v2"] .login-demo code {
+  font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: var(--ui-text-12);
+  color: var(--ui-cyan); background: rgba(92, 207, 230, .08);
+  padding: 1px 6px; border-radius: 4px; user-select: all;
+}
+[data-ui="v2"] .login-small { margin-top: var(--ui-space-6); color: var(--ui-text-muted); font-size: var(--ui-text-12); }
+
+@media (max-width: 860px) {
+  [data-ui="v2"] .planner-grid { grid-template-columns: 1fr; }
+  [data-ui="v2"] .service-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-ui="v2"] .portal-main h1 { font-size: var(--ui-text-24); }
+}
+@media (max-width: 480px) {
+  [data-ui="v2"] .service-list { grid-template-columns: 1fr; }
+  [data-ui="v2"] .portal-panel { padding: var(--ui-space-4); }
+}

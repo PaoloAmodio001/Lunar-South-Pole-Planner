@@ -69,8 +69,11 @@
   const LABELS = {
     LOADED: 'caricato', LOADING: 'in caricamento', 'LOAD ERROR': 'errore di caricamento',
     WAITING: 'non calcolate', READY: 'non calcolate', CALCULATING: 'calcolo in corso',
-    'CONNECTED · JPL': 'calcolate (JPL)', ERROR: 'errore'
+    'CONNECTED · JPL': 'calcolate (JPL)', ERROR: 'errore',
+    'BACKEND OFFLINE': 'backend non raggiungibile', 'BACKEND ERROR': 'errore del backend',
+    'JPL UNAVAILABLE': 'JPL Horizons non disponibile', 'INVALID DATA': 'risposta JPL non valida'
   };
+  const ERROR_STATES = new Set(['BACKEND OFFLINE', 'BACKEND ERROR', 'JPL UNAVAILABLE', 'INVALID DATA', 'ERROR', 'LOAD ERROR']);
   function mirror(sourceId, textId, dotId) {
     const src = $(sourceId), text = $(textId), dot = $(dotId);
     if (!src || !text || !dot) return;
@@ -80,6 +83,7 @@
       let state = stateOf(src);
       if (sourceId === 'ephemerisStatus' && (raw === 'WAITING' || raw === 'READY')) state = 'unknown';
       if (raw === 'CALCULATING') state = 'busy';
+      if (ERROR_STATES.has(raw)) state = 'error';
       dot.dataset.state = state;
     };
     new MutationObserver(sync).observe(src, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['class'] });
@@ -88,19 +92,25 @@
   mirror('modelStatus', 'hdrModel', 'hdrModelDot');
   mirror('ephemerisStatus', 'hdrEphem', 'hdrEphemDot');
 
-  // Server: verifica reale (una richiesta a /api/sites, endpoint di sola lettura già usato dalla UI).
-  async function checkServer() {
+  // Server: verifica reale su /api/health (pubblico, senza dati). Un errore di rete
+  // significa processo Python spento o connessione interrotta; session.js poi
+  // ricontrolla ogni 5 s e notifica il ritorno con l'evento 'lmc:backend'.
+  function showServer(available) {
     const text = $('hdrServer'), dot = $('hdrServerDot');
+    if (!text || !dot) return;
+    text.textContent = available ? 'raggiungibile' : 'non raggiungibile (avviare ./start.sh)';
+    dot.dataset.state = available ? 'ok' : 'error';
+  }
+  async function checkServer() {
+    if (window.lmcSession) { showServer(await window.lmcSession.probe()); return; }
     try {
-      const r = await fetch('/api/sites', { cache: 'no-store' });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      text.textContent = 'raggiungibile';
-      dot.dataset.state = 'ok';
+      const r = await fetch('/api/health', { cache: 'no-store' });
+      showServer(r.ok);
     } catch (e) {
-      text.textContent = 'non raggiungibile';
-      dot.dataset.state = 'error';
+      showServer(false);
     }
   }
+  window.addEventListener('lmc:backend', e => showServer(e.detail.available));
   checkServer();
   setInterval(() => { if (!document.hidden) checkServer(); }, 60000);
 

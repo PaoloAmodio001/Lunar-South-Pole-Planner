@@ -5,6 +5,9 @@
   const $ = id => document.getElementById(id);
   const root = $('scienceSection');
   if (!root) return;
+  // Strumento dei Pianificatori di missione: attivo solo in /mission-control (sessione
+  // verificata dal server); sulla piattaforma pubblica non interroga API riservate.
+  if (window.lmcSession && !window.lmcSession.reservedPage) return;
 
   const rasterSelect = $('sciRaster');
   const stateTag = $('sciState');

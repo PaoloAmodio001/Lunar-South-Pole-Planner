@@ -17,3 +17,5 @@ numpy==2.5.4          # moduli scientifici, science_api
 rasterio==1.5.2       # DEM/raster LOLA-LROC (installa anche affine)
 pyproj==3.8.0         # src/lunar_geometry.py
 matplotlib==3.11.2    # src/mission_orchestrator.py (grafici report)
+skyfield==1.55        # src/local_ephemeris.py (offline Sun/Earth ephemeris: contact_windows,
+                      # terrain_cross_validation, ephemeris_validation, astronomy.source="local")

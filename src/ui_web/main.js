@@ -302,8 +302,9 @@ site.addEventListener('change',update);
 site.addEventListener('change',()=>focusSite(site.value));
 document.querySelector('#reset').addEventListener('click',resetView);
 const dateInput=document.querySelector('#date');
-const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-dateInput.value=now.toISOString().slice(0,16);
+// Il campo è "inizio UTC" e il backend lo interpreta come UTC: il valore iniziale è
+// l'ora UTC corrente (prima era l'ora locale etichettata come UTC, sfasata del fuso orario).
+dateInput.value=new Date().toISOString().slice(0,16);
 document.querySelector('#publicDate').value = dateInput.value;
 update();
 
@@ -323,6 +324,62 @@ if (chartNames.length >= 2) {
 }
 
 if (liveStatus) liveStatus.textContent = 'READY';
+
+// Classificazione degli errori delle effemeridi (codici dal backend, vedi app.py EPHEMERIS_ERRORS).
+const EPHEMERIS_ERROR_TEXT = {
+  backend_unreachable: ['BACKEND OFFLINE',
+    'Backend Lunar Mission Control non raggiungibile: il server Python non è in esecuzione o la connessione è interrotta. Avvialo con ./start.sh: la richiesta verrà ripetuta automaticamente quando il backend torna disponibile.'],
+  backend_invalid: ['BACKEND ERROR', 'Il backend ha restituito una risposta non leggibile'],
+  backend_error: ['BACKEND ERROR', 'Errore interno del backend'],
+  jpl_timeout: ['JPL UNAVAILABLE', 'Servizio NASA/JPL Horizons non disponibile (timeout)'],
+  jpl_unreachable: ['JPL UNAVAILABLE', 'Servizio NASA/JPL Horizons non raggiungibile dal backend (rete o DNS)'],
+  jpl_http_error: ['JPL UNAVAILABLE', 'Servizio NASA/JPL Horizons in errore'],
+  jpl_rejected: ['INVALID DATA', 'Richiesta rifiutata da NASA/JPL Horizons'],
+  jpl_invalid_response: ['INVALID DATA', 'Risposta astronomica non valida'],
+  invalid_request: ['ERROR', 'Parametri non validi'],
+  session_expired: ['ERROR', 'Sessione scaduta'],
+  auth_required: ['ERROR', 'Autenticazione richiesta']
+};
+let ephemerisRecovery = null;
+
+function classifyEphemerisError(err) {
+  const code = err && err.code ? err.code : 'backend_error';
+  const [status, label] = EPHEMERIS_ERROR_TEXT[code] || ['ERROR', 'Effemeridi non disponibili'];
+  const detail = code === 'backend_unreachable' ? '' : (err && err.message ? `: ${err.message}` : '');
+  return { code, status, text: `${label}${detail}` };
+}
+
+// Ripristino automatico: backend spento → riprova quando /api/health risponde;
+// JPL non disponibile → controlla /api/services?refresh=1 ogni 60 s e riprova quando torna.
+function scheduleEphemerisRecovery(code) {
+  if (ephemerisRecovery) return;
+  if (code === 'backend_unreachable') {
+    ephemerisRecovery = { code };
+    return; // gestito dall'evento lmc:backend
+  }
+  if (!['jpl_timeout', 'jpl_unreachable', 'jpl_http_error'].includes(code)) return;
+  ephemerisRecovery = { code, timer: setInterval(async () => {
+    if (document.hidden) return;
+    try {
+      const r = await fetch('/api/services?refresh=1', { cache: 'no-store' });
+      const s = await r.json();
+      if (s.jpl_horizons && s.jpl_horizons.available) {
+        clearEphemerisRecovery();
+        updateEphemerides();
+      }
+    } catch (_) { /* backend spento: se ne occupa lmc:backend */ }
+  }, 60000) };
+}
+function clearEphemerisRecovery() {
+  if (ephemerisRecovery && ephemerisRecovery.timer) clearInterval(ephemerisRecovery.timer);
+  ephemerisRecovery = null;
+}
+window.addEventListener('lmc:backend', e => {
+  if (e.detail.available && ephemerisRecovery && ephemerisRecovery.code === 'backend_unreachable') {
+    clearEphemerisRecovery();
+    updateEphemerides();
+  }
+});
 
 function drawEphemerisChart(canvas, observations, field, threshold, color, windows = []) {
   const ctx = canvas.getContext('2d');
@@ -527,14 +584,35 @@ async function updateEphemerides() {
   if (liveStatus) liveStatus.textContent = 'CALCULATING';
 
   try {
-    const response = await fetch(`/api/ephemerides?${params.toString()}`, {cache: 'no-store'});
-    const data = await response.json();
-    if (!response.ok || data.status !== 'ok') {
-      throw new Error(data.error || `HTTP ${response.status}`);
+    let response;
+    try {
+      response = await fetch(`/api/ephemerides?${params.toString()}`, {cache: 'no-store'});
+    } catch (networkError) {
+      const e = new Error(networkError.message);
+      e.code = 'backend_unreachable';
+      throw e;
     }
+    let data;
+    try {
+      data = await response.json();
+    } catch (_) {
+      const e = new Error(`HTTP ${response.status}, contenuto non JSON`);
+      e.code = 'backend_invalid';
+      throw e;
+    }
+    if (!response.ok || data.status !== 'ok') {
+      const e = new Error(data.error || `HTTP ${response.status}`);
+      e.code = data.error_code || (response.status >= 500 ? 'backend_error' : 'invalid_request');
+      throw e;
+    }
+    clearEphemerisRecovery();
 
     const observations = data.observations || [];
-    if (observations.length < 2) throw new Error('Horizons ha restituito meno di due osservazioni.');
+    if (observations.length < 2) {
+      const e = new Error('Horizons ha restituito meno di due osservazioni.');
+      e.code = 'jpl_invalid_response';
+      throw e;
+    }
 
     drawEphemerisChart(chart1, observations, 'sun_elevation_deg',
       data.thresholds.sun_elevation_deg, '#EAD9A7', data.windows);
@@ -591,11 +669,14 @@ async function updateEphemerides() {
       `Elevazione della Terra · ${windows.length} finestre`;
   } catch (err) {
     console.error('Ephemerides error:', err);
+    const info = classifyEphemerisError(err);
     if (liveStatus) {
-      liveStatus.textContent = 'ERROR';
+      liveStatus.textContent = info.status;
       liveStatus.className = 'warn';
     }
-    statusMessage.textContent = `Effemeridi non disponibili: ${err.message}. Nessun dato dimostrativo mostrato.`;
+    const stale = window.lastEphemerides ? ' I grafici mostrano ancora l\'ultima richiesta riuscita.' : '';
+    statusMessage.textContent = `Effemeridi non disponibili — ${info.text}. Nessun dato dimostrativo mostrato.${stale}`;
+    scheduleEphemerisRecovery(info.code);
   } finally {
     applyButton.disabled = false;
     applyButton.textContent = 'UPDATE VISUALIZATION';
@@ -968,4 +1049,5 @@ async function loadLrocQuality() {
   }
 }
 
-loadLrocQuality();
+// Report LROC: pannello dei Pianificatori di missione (API riservata, solo /mission-control).
+if (!window.lmcSession || window.lmcSession.reservedPage) loadLrocQuality();

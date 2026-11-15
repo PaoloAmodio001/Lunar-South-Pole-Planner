@@ -1,0 +1,649 @@
+{
+ "source": "NASA/JPL Horizons API, QUANTITIES=4,20, CENTER=coord@301, fetched 2026-11-15",
+ "start_utc": "2026-11-15T00:00",
+ "step": "24h",
+ "series": {
+  "Shackleton:Sun": [
+   {
+    "time_utc": "2026-11-15T00:00:00+00:00",
+    "azimuth_deg": 286.295095,
+    "elevation_deg": 1.621798,
+    "distance_au": 0.98807675347772,
+    "range_rate_km_s": 0.3961214
+   },
+   {
+    "time_utc": "2026-11-16T00:00:00+00:00",
+    "azimuth_deg": 274.114701,
+    "elevation_deg": 1.571927,
+    "distance_au": 0.98832753420803,
+    "range_rate_km_s": 0.467383
+   },
+   {
+    "time_utc": "2026-11-17T00:00:00+00:00",
+    "azimuth_deg": 261.941026,
+    "elevation_deg": 1.520621,
+    "distance_au": 0.98861066736202,
+    "range_rate_km_s": 0.5076946
+   },
+   {
+    "time_utc": "2026-11-18T00:00:00+00:00",
+    "azimuth_deg": 249.774404,
+    "elevation_deg": 1.47027,
+    "distance_au": 0.98890748542309,
+    "range_rate_km_s": 0.514324
+   },
+   {
+    "time_utc": "2026-11-19T00:00:00+00:00",
+    "azimuth_deg": 237.614971,
+    "elevation_deg": 1.423116,
+    "distance_au": 0.98919777774106,
+    "range_rate_km_s": 0.4846938
+   },
+   {
+    "time_utc": "2026-11-20T00:00:00+00:00",
+    "azimuth_deg": 225.46263,
+    "elevation_deg": 1.38114,
+    "distance_au": 0.98945996677883,
+    "range_rate_km_s": 0.4167317
+   },
+   {
+    "time_utc": "2026-11-21T00:00:00+00:00",
+    "azimuth_deg": 213.317008,
+    "elevation_deg": 1.34598,
+    "distance_au": 0.98967157728677,
+    "range_rate_km_s": 0.3095409
+   },
+   {
+    "time_utc": "2026-11-22T00:00:00+00:00",
+    "azimuth_deg": 201.1774,
+    "elevation_deg": 1.318873,
+    "distance_au": 0.98981018430087,
+    "range_rate_km_s": 0.1643734
+   },
+   {
+    "time_utc": "2026-11-23T00:00:00+00:00",
+    "azimuth_deg": 189.042731,
+    "elevation_deg": 1.300643,
+    "distance_au": 0.98985497184534,
+    "range_rate_km_s": -0.0142771
+   },
+   {
+    "time_utc": "2026-11-24T00:00:00+00:00",
+    "azimuth_deg": 176.911547,
+    "elevation_deg": 1.291732,
+    "distance_au": 0.98978886366921,
+    "range_rate_km_s": -0.2178733
+   },
+   {
+    "time_utc": "2026-11-25T00:00:00+00:00",
+    "azimuth_deg": 164.782076,
+    "elevation_deg": 1.292243,
+    "distance_au": 0.98960090121288,
+    "range_rate_km_s": -0.4338702
+   },
+   {
+    "time_utc": "2026-11-26T00:00:00+00:00",
+    "azimuth_deg": 152.652347,
+    "elevation_deg": 1.301993,
+    "distance_au": 0.98928825578862,
+    "range_rate_km_s": -0.6469728
+   },
+   {
+    "time_utc": "2026-11-27T00:00:00+00:00",
+    "azimuth_deg": 140.520377,
+    "elevation_deg": 1.320527,
+    "distance_au": 0.98885718550082,
+    "range_rate_km_s": -0.8414476
+   },
+   {
+    "time_utc": "2026-11-28T00:00:00+00:00",
+    "azimuth_deg": 128.384367,
+    "elevation_deg": 1.347095,
+    "distance_au": 0.98832253323447,
+    "range_rate_km_s": -1.0036963
+   },
+   {
+    "time_utc": "2026-11-29T00:00:00+00:00",
+    "azimuth_deg": 116.242864,
+    "elevation_deg": 1.380608,
+    "distance_au": 0.98770590080519,
+    "range_rate_km_s": -1.1241254
+   }
+  ],
+  "Shackleton:Earth": [
+   {
+    "time_utc": "2026-11-15T00:00:00+00:00",
+    "azimuth_deg": 169.247349,
+    "elevation_deg": -3.781914,
+    "distance_au": 0.00270608268057,
+    "range_rate_km_s": -0.0168117
+   },
+   {
+    "time_utc": "2026-11-16T00:00:00+00:00",
+    "azimuth_deg": 167.889736,
+    "elevation_deg": -2.539217,
+    "distance_au": 0.00269235426815,
+    "range_rate_km_s": -0.0307786
+   },
+   {
+    "time_utc": "2026-11-17T00:00:00+00:00",
+    "azimuth_deg": 166.654129,
+    "elevation_deg": -1.193319,
+    "distance_au": 0.00267058405062,
+    "range_rate_km_s": -0.0444779
+   },
+   {
+    "time_utc": "2026-11-18T00:00:00+00:00",
+    "azimuth_deg": 165.636145,
+    "elevation_deg": 0.208016,
+    "distance_au": 0.00264126383631,
+    "range_rate_km_s": -0.0567146
+   },
+   {
+    "time_utc": "2026-11-19T00:00:00+00:00",
+    "azimuth_deg": 164.933164,
+    "elevation_deg": 1.60976,
+    "distance_au": 0.00260561330221,
+    "range_rate_km_s": -0.0661792
+   },
+   {
+    "time_utc": "2026-11-20T00:00:00+00:00",
+    "azimuth_deg": 164.635076,
+    "elevation_deg": 2.946854,
+    "distance_au": 0.00256561280931,
+    "range_rate_km_s": -0.0715715
+   },
+   {
+    "time_utc": "2026-11-21T00:00:00+00:00",
+    "azimuth_deg": 164.811687,
+    "elevation_deg": 4.142709,
+    "distance_au": 0.00252394903937,
+    "range_rate_km_s": -0.0717803
+   },
+   {
+    "time_utc": "2026-11-22T00:00:00+00:00",
+    "azimuth_deg": 165.497255,
+    "elevation_deg": 5.111061,
+    "distance_au": 0.00248384073587,
+    "range_rate_km_s": -0.0661166
+   },
+   {
+    "time_utc": "2026-11-23T00:00:00+00:00",
+    "azimuth_deg": 166.6749,
+    "elevation_deg": 5.763368,
+    "distance_au": 0.00244872174365,
+    "range_rate_km_s": -0.0545646
+   },
+   {
+    "time_utc": "2026-11-24T00:00:00+00:00",
+    "azimuth_deg": 168.266652,
+    "elevation_deg": 6.022651,
+    "distance_au": 0.00242179302526,
+    "range_rate_km_s": -0.0379668
+   },
+   {
+    "time_utc": "2026-11-25T00:00:00+00:00",
+    "azimuth_deg": 170.136343,
+    "elevation_deg": 5.841311,
+    "distance_au": 0.00240551473421,
+    "range_rate_km_s": -0.0180271
+   },
+   {
+    "time_utc": "2026-11-26T00:00:00+00:00",
+    "azimuth_deg": 172.109414,
+    "elevation_deg": 5.216451,
+    "distance_au": 0.00240116988954,
+    "range_rate_km_s": 0.0029465
+   },
+   {
+    "time_utc": "2026-11-27T00:00:00+00:00",
+    "azimuth_deg": 174.005553,
+    "elevation_deg": 4.195064,
+    "distance_au": 0.00240864699626,
+    "range_rate_km_s": 0.0225243
+   },
+   {
+    "time_utc": "2026-11-28T00:00:00+00:00",
+    "azimuth_deg": 175.672314,
+    "elevation_deg": 2.865717,
+    "distance_au": 0.00242652727177,
+    "range_rate_km_s": 0.0386917
+   },
+   {
+    "time_utc": "2026-11-29T00:00:00+00:00",
+    "azimuth_deg": 177.00723,
+    "elevation_deg": 1.34054,
+    "distance_au": 0.00245244554527,
+    "range_rate_km_s": 0.0502289
+   }
+  ],
+  "Connecting Ridge:Sun": [
+   {
+    "time_utc": "2026-11-15T00:00:00+00:00",
+    "azimuth_deg": 251.908179,
+    "elevation_deg": 1.389713,
+    "distance_au": 0.9880768004992,
+    "range_rate_km_s": 0.3961428
+   },
+   {
+    "time_utc": "2026-11-16T00:00:00+00:00",
+    "azimuth_deg": 239.729555,
+    "elevation_deg": 1.284635,
+    "distance_au": 0.98832759241905,
+    "range_rate_km_s": 0.4674002
+   },
+   {
+    "time_utc": "2026-11-17T00:00:00+00:00",
+    "azimuth_deg": 227.55773,
+    "elevation_deg": 1.191075,
+    "distance_au": 0.98861073413856,
+    "range_rate_km_s": 0.507707
+   },
+   {
+    "time_utc": "2026-11-18T00:00:00+00:00",
+    "azimuth_deg": 215.392943,
+    "elevation_deg": 1.1133,
+    "distance_au": 0.98890755776019,
+    "range_rate_km_s": 0.5143308
+   },
+   {
+    "time_utc": "2026-11-19T00:00:00+00:00",
+    "azimuth_deg": 203.235267,
+    "elevation_deg": 1.054757,
+    "distance_au": 0.98919785238911,
+    "range_rate_km_s": 0.4846949
+   },
+   {
+    "time_utc": "2026-11-20T00:00:00+00:00",
+    "azimuth_deg": 191.084568,
+    "elevation_deg": 1.017911,
+    "distance_au": 0.98946004039013,
+    "range_rate_km_s": 0.416727
+   },
+   {
+    "time_utc": "2026-11-21T00:00:00+00:00",
+    "azimuth_deg": 178.940458,
+    "elevation_deg": 1.004141,
+    "distance_au": 0.98967164656552,
+    "range_rate_km_s": 0.3095306
+   },
+   {
+    "time_utc": "2026-11-22T00:00:00+00:00",
+    "azimuth_deg": 166.80223,
+    "elevation_deg": 1.013703,
+    "distance_au": 0.98981024614991,
+    "range_rate_km_s": 0.1643581
+   },
+   {
+    "time_utc": "2026-11-23T00:00:00+00:00",
+    "azimuth_deg": 154.668805,
+    "elevation_deg": 1.045768,
+    "distance_au": 0.9898550235031,
+    "range_rate_km_s": -0.0142969
+   },
+   {
+    "time_utc": "2026-11-24T00:00:00+00:00",
+    "azimuth_deg": 142.538718,
+    "elevation_deg": 1.09852,
+    "distance_au": 0.98978890283107,
+    "range_rate_km_s": -0.2178967
+   },
+   {
+    "time_utc": "2026-11-25T00:00:00+00:00",
+    "azimuth_deg": 130.410164,
+    "elevation_deg": 1.169314,
+    "distance_au": 0.98960092613198,
+    "range_rate_km_s": -0.433896
+   },
+   {
+    "time_utc": "2026-11-26T00:00:00+00:00",
+    "azimuth_deg": 118.281128,
+    "elevation_deg": 1.254838,
+    "distance_au": 0.98928826535225,
+    "range_rate_km_s": -0.647
+   },
+   {
+    "time_utc": "2026-11-27T00:00:00+00:00",
+    "azimuth_deg": 106.149565,
+    "elevation_deg": 1.351266,
+    "distance_au": 0.98885717927944,
+    "range_rate_km_s": -0.8414749
+   },
+   {
+    "time_utc": "2026-11-28T00:00:00+00:00",
+    "azimuth_deg": 94.013613,
+    "elevation_deg": 1.454382,
+    "distance_au": 0.98832251150151,
+    "range_rate_km_s": -1.0037225
+   },
+   {
+    "time_utc": "2026-11-29T00:00:00+00:00",
+    "azimuth_deg": 81.871755,
+    "elevation_deg": 1.559679,
+    "distance_au": 0.98770586452652,
+    "range_rate_km_s": -1.1241493
+   }
+  ],
+  "Connecting Ridge:Earth": [
+   {
+    "time_utc": "2026-11-15T00:00:00+00:00",
+    "azimuth_deg": 134.846699,
+    "elevation_deg": -3.931401,
+    "distance_au": 0.00270611291588,
+    "range_rate_km_s": -0.0168145
+   },
+   {
+    "time_utc": "2026-11-16T00:00:00+00:00",
+    "azimuth_deg": 133.496305,
+    "elevation_deg": -2.680715,
+    "distance_au": 0.00269238292099,
+    "range_rate_km_s": -0.0307813
+   },
+   {
+    "time_utc": "2026-11-17T00:00:00+00:00",
+    "azimuth_deg": 132.268685,
+    "elevation_deg": -1.327483,
+    "distance_au": 0.00267061123822,
+    "range_rate_km_s": -0.0444803
+   },
+   {
+    "time_utc": "2026-11-18T00:00:00+00:00",
+    "azimuth_deg": 131.25915,
+    "elevation_deg": 0.079934,
+    "distance_au": 0.00264128979621,
+    "range_rate_km_s": -0.0567165
+   },
+   {
+    "time_utc": "2026-11-19T00:00:00+00:00",
+    "azimuth_deg": 130.564711,
+    "elevation_deg": 1.48589,
+    "distance_au": 0.0026056383982,
+    "range_rate_km_s": -0.0661803
+   },
+   {
+    "time_utc": "2026-11-20T00:00:00+00:00",
+    "azimuth_deg": 130.274804,
+    "elevation_deg": 2.824754,
+    "distance_au": 0.00256563752318,
+    "range_rate_km_s": -0.0715717
+   },
+   {
+    "time_utc": "2026-11-21T00:00:00+00:00",
+    "azimuth_deg": 130.458699,
+    "elevation_deg": 4.019503,
+    "distance_au": 0.00252397394456,
+    "range_rate_km_s": -0.0717794
+   },
+   {
+    "time_utc": "2026-11-22T00:00:00+00:00",
+    "azimuth_deg": 131.150053,
+    "elevation_deg": 4.983677,
+    "distance_au": 0.00248386645022,
+    "range_rate_km_s": -0.0661146
+   },
+   {
+    "time_utc": "2026-11-23T00:00:00+00:00",
+    "azimuth_deg": 132.331393,
+    "elevation_deg": 5.628879,
+    "distance_au": 0.00244874886285,
+    "range_rate_km_s": -0.0545617
+   },
+   {
+    "time_utc": "2026-11-24T00:00:00+00:00",
+    "azimuth_deg": 133.924283,
+    "elevation_deg": 5.878666,
+    "distance_au": 0.0024218220458,
+    "range_rate_km_s": -0.0379631
+   },
+   {
+    "time_utc": "2026-11-25T00:00:00+00:00",
+    "azimuth_deg": 135.792351,
+    "elevation_deg": 5.68633,
+    "distance_au": 0.00240554598202,
+    "range_rate_km_s": -0.0180231
+   },
+   {
+    "time_utc": "2026-11-26T00:00:00+00:00",
+    "azimuth_deg": 137.761184,
+    "elevation_deg": 5.050059,
+    "distance_au": 0.00240120347486,
+    "range_rate_km_s": 0.0029505
+   },
+   {
+    "time_utc": "2026-11-27T00:00:00+00:00",
+    "azimuth_deg": 139.650947,
+    "elevation_deg": 4.017906,
+    "distance_au": 0.00240868280918,
+    "range_rate_km_s": 0.022528
+   },
+   {
+    "time_utc": "2026-11-28T00:00:00+00:00",
+    "azimuth_deg": 141.309857,
+    "elevation_deg": 2.679269,
+    "distance_au": 0.00242656501904,
+    "range_rate_km_s": 0.0386947
+   },
+   {
+    "time_utc": "2026-11-29T00:00:00+00:00",
+    "azimuth_deg": 142.636142,
+    "elevation_deg": 1.14678,
+    "distance_au": 0.00245248481378,
+    "range_rate_km_s": 0.0502311
+   }
+  ],
+  "Nobile:Sun": [
+   {
+    "time_utc": "2026-11-15T00:00:00+00:00",
+    "azimuth_deg": 77.225067,
+    "elevation_deg": 2.571829,
+    "distance_au": 0.98807656113231,
+    "range_rate_km_s": 0.3957734
+   },
+   {
+    "time_utc": "2026-11-16T00:00:00+00:00",
+    "azimuth_deg": 65.066486,
+    "elevation_deg": 3.485737,
+    "distance_au": 0.98832714676456,
+    "range_rate_km_s": 0.4670579
+   },
+   {
+    "time_utc": "2026-11-17T00:00:00+00:00",
+    "azimuth_deg": 52.896859,
+    "elevation_deg": 4.312117,
+    "distance_au": 0.9886101023958,
+    "range_rate_km_s": 0.5074072
+   },
+   {
+    "time_utc": "2026-11-18T00:00:00+00:00",
+    "azimuth_deg": 40.713994,
+    "elevation_deg": 5.013892,
+    "distance_au": 0.98890676846373,
+    "range_rate_km_s": 0.514087
+   },
+   {
+    "time_utc": "2026-11-19T00:00:00+00:00",
+    "azimuth_deg": 28.518479,
+    "elevation_deg": 5.559435,
+    "distance_au": 0.98919694110002,
+    "range_rate_km_s": 0.4845178
+   },
+   {
+    "time_utc": "2026-11-20T00:00:00+00:00",
+    "azimuth_deg": 16.313696,
+    "elevation_deg": 5.924043,
+    "distance_au": 0.98945904807844,
+    "range_rate_km_s": 0.4166245
+   },
+   {
+    "time_utc": "2026-11-21T00:00:00+00:00",
+    "azimuth_deg": 4.105309,
+    "elevation_deg": 6.091122,
+    "distance_au": 0.98967061776039,
+    "range_rate_km_s": 0.3095072
+   },
+   {
+    "time_utc": "2026-11-22T00:00:00+00:00",
+    "azimuth_deg": 351.90028,
+    "elevation_deg": 6.053004,
+    "distance_au": 0.98980922694332,
+    "range_rate_km_s": 0.1644146
+   },
+   {
+    "time_utc": "2026-11-23T00:00:00+00:00",
+    "azimuth_deg": 339.705618,
+    "elevation_deg": 5.811328,
+    "distance_au": 0.98985405949784,
+    "range_rate_km_s": -0.014163
+   },
+   {
+    "time_utc": "2026-11-24T00:00:00+00:00",
+    "azimuth_deg": 327.527068,
+    "elevation_deg": 5.376958,
+    "distance_au": 0.98978803712343,
+    "range_rate_km_s": -0.2176914
+   },
+   {
+    "time_utc": "2026-11-25T00:00:00+00:00",
+    "azimuth_deg": 315.368041,
+    "elevation_deg": 4.769435,
+    "distance_au": 0.98960019741478,
+    "range_rate_km_s": -0.4336286
+   },
+   {
+    "time_utc": "2026-11-26T00:00:00+00:00",
+    "azimuth_deg": 303.228965,
+    "elevation_deg": 4.016042,
+    "distance_au": 0.989287706215,
+    "range_rate_km_s": -0.6466823
+   },
+   {
+    "time_utc": "2026-11-27T00:00:00+00:00",
+    "azimuth_deg": 291.107184,
+    "elevation_deg": 3.1505,
+    "distance_au": 0.98885681477283,
+    "range_rate_km_s": -0.8411211
+   },
+   {
+    "time_utc": "2026-11-28T00:00:00+00:00",
+    "azimuth_deg": 278.997399,
+    "elevation_deg": 2.211426,
+    "distance_au": 0.9883223580236,
+    "range_rate_km_s": -1.0033483
+   },
+   {
+    "time_utc": "2026-11-29T00:00:00+00:00",
+    "azimuth_deg": 266.892529,
+    "elevation_deg": 1.240601,
+    "distance_au": 0.9877059290782,
+    "range_rate_km_s": -1.1237714
+   }
+  ],
+  "Nobile:Earth": [
+   {
+    "time_utc": "2026-11-15T00:00:00+00:00",
+    "azimuth_deg": 320.093009,
+    "elevation_deg": -0.055244,
+    "distance_au": 0.00270532782942,
+    "range_rate_km_s": -0.0167868
+   },
+   {
+    "time_utc": "2026-11-16T00:00:00+00:00",
+    "azimuth_deg": 318.673407,
+    "elevation_deg": 1.114696,
+    "distance_au": 0.00269161385374,
+    "range_rate_km_s": -0.0307538
+   },
+   {
+    "time_utc": "2026-11-17T00:00:00+00:00",
+    "azimuth_deg": 317.366361,
+    "elevation_deg": 2.392146,
+    "distance_au": 0.00266985754878,
+    "range_rate_km_s": -0.0444549
+   },
+   {
+    "time_utc": "2026-11-18T00:00:00+00:00",
+    "azimuth_deg": 316.270326,
+    "elevation_deg": 3.735299,
+    "distance_au": 0.00264054956704,
+    "range_rate_km_s": -0.0566957
+   },
+   {
+    "time_utc": "2026-11-19T00:00:00+00:00",
+    "azimuth_deg": 315.486733,
+    "elevation_deg": 5.095526,
+    "distance_au": 0.00260490828951,
+    "range_rate_km_s": -0.0661665
+   },
+   {
+    "time_utc": "2026-11-20T00:00:00+00:00",
+    "azimuth_deg": 315.11082,
+    "elevation_deg": 6.413808,
+    "distance_au": 0.00256491279798,
+    "range_rate_km_s": -0.0715672
+   },
+   {
+    "time_utc": "2026-11-21T00:00:00+00:00",
+    "azimuth_deg": 315.218885,
+    "elevation_deg": 7.618146,
+    "distance_au": 0.00252324872422,
+    "range_rate_km_s": -0.0717858
+   },
+   {
+    "time_utc": "2026-11-22T00:00:00+00:00",
+    "azimuth_deg": 315.852217,
+    "elevation_deg": 8.624166,
+    "distance_au": 0.00248313423538,
+    "range_rate_km_s": -0.0661324
+   },
+   {
+    "time_utc": "2026-11-23T00:00:00+00:00",
+    "azimuth_deg": 317.000319,
+    "elevation_deg": 9.341445,
+    "distance_au": 0.00244800329463,
+    "range_rate_km_s": -0.0545899
+   },
+   {
+    "time_utc": "2026-11-24T00:00:00+00:00",
+    "azimuth_deg": 318.589284,
+    "elevation_deg": 9.686995,
+    "distance_au": 0.00242105779097,
+    "range_rate_km_s": -0.0379992
+   },
+   {
+    "time_utc": "2026-11-25T00:00:00+00:00",
+    "azimuth_deg": 320.483189,
+    "elevation_deg": 9.603913,
+    "distance_au": 0.00240475953339,
+    "range_rate_km_s": -0.0180632
+   },
+   {
+    "time_utc": "2026-11-26T00:00:00+00:00",
+    "azimuth_deg": 322.503491,
+    "elevation_deg": 9.078709,
+    "distance_au": 0.00240039362982,
+    "range_rate_km_s": 0.0029103
+   },
+   {
+    "time_utc": "2026-11-27T00:00:00+00:00",
+    "azimuth_deg": 324.462876,
+    "elevation_deg": 8.148927,
+    "distance_au": 0.0024078506766,
+    "range_rate_km_s": 0.0224915
+   },
+   {
+    "time_utc": "2026-11-28T00:00:00+00:00",
+    "azimuth_deg": 326.201138,
+    "elevation_deg": 6.896599,
+    "distance_au": 0.00242571358068,
+    "range_rate_km_s": 0.0386647
+   },
+   {
+    "time_utc": "2026-11-29T00:00:00+00:00",
+    "azimuth_deg": 327.609318,
+    "elevation_deg": 5.430715,
+    "distance_au": 0.00245161822558,
+    "range_rate_km_s": 0.0502088
+   }
+  ]
+ }
+}

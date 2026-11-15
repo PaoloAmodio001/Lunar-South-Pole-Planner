@@ -1,29 +1,37 @@
-# Last updated: 2026-11-14
-"""Punto di ingresso ufficiale della Web UI di Lunar South Pole Planner.
+# Last updated: 2026-11-15
+"""Punto di ingresso ufficiale della piattaforma Lunar South Pole Planner: piattaforma
+pubblica (/) e sezione riservata Pianificatori di missione (/dashboard, /mission-control).
 
 Uso:
+    ./start.sh                                  # avvio consigliato (venv + controlli)
     python src/ui_web/app.py                    # server locale + browser (default)
     python src/ui_web/app.py --port 9000        # porta alternativa
     python src/ui_web/app.py --no-browser       # solo server
     python src/ui_web/app.py --desktop          # finestra desktop PySide6 (opzionale)
 
 Variabili d'ambiente equivalenti: LUNAR_UI_HOST, LUNAR_UI_PORT, LUNAR_UI_NO_BROWSER=1.
+Autenticazione (unico login, solo per i Pianificatori di missione): src/ui_web/auth.py.
 Il server espone soltanto le risorse elencate in una whitelist esplicita.
 """
+import html
 import argparse
+import hmac
 import errno
 import ipaddress
 import json
 import os
 import re
+import secrets
 import shutil
+import signal
 import sys
+import time
 import webbrowser
 from datetime import datetime, timezone
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from threading import Thread, Timer
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import urlparse, parse_qs, unquote, quote
 
 UI_DIR = Path(__file__).resolve().parent
 # Bootstrap minimo per l'avvio come script; poi la radice viene da src.paths (F5).
@@ -32,7 +40,7 @@ if str(UI_DIR.parents[1]) not in sys.path:
 
 from src.paths import PROJECT_ROOT
 
-from src.astronomy import SITES, query_observations, AstronomyError
+from src.astronomy import SITES, query_observations, AstronomyError, probe_horizons
 from src.mission_planning import find_operational_windows
 from src.mission_planner import MissionConfig, rank_operational_windows
 from src.mission_analytics import summarize_ephemerides
@@ -41,6 +49,8 @@ from src.thermal_model import simulate_single_node_thermal
 from src.ui_web import mission_runner
 from src.ui_web.mission_runner import ConfigError, MissionBusyError
 from src.ui_web import science_api
+from src.ui_web.auth import (AuthManager, FirstUserError, MIN_PASSWORD_LENGTH, USERNAME_RE,
+                             token_from_cookie_header, safe_next_path)
 
 MISSIONS = mission_runner.MissionManager()
 MISSION_RUN_RE = re.compile(
@@ -72,6 +82,10 @@ UI_ASSETS_SUFFIXES = {".css", ".js", ".woff2", ".svg"}
 STATIC_ROUTES = {
     "/": UI_DIR / "index.html",
     "/index.html": UI_DIR / "index.html",
+    "/mission-control": UI_DIR / "index.html",
+    "/dashboard": UI_DIR / "dashboard.html",
+    "/dashboard.js": UI_DIR / "dashboard.js",
+    "/session.js": UI_DIR / "session.js",
     "/main.js": UI_DIR / "main.js",
     "/mission.js": UI_DIR / "mission.js",
     "/science.js": UI_DIR / "science.js",
@@ -82,6 +96,57 @@ LEGACY_REDIRECTS = {
     "/src/ui_web/index.html": "/",
     "/src/ui_web/": "/",
 }
+LOGIN_PAGE = UI_DIR / "login.html"
+# Ambito dell'autenticazione: SOLO la sezione riservata "Pianificatori di missione"
+# (MISSION PLANNERS), con un unico login. La piattaforma pubblica — homepage, profili
+# Pubblico ed Educatore, globo e le API che usa (/api/health, /api/sites,
+# /api/ephemerides, /api/services) — resta accessibile senza account.
+# Richiedono la sessione (controllo lato server, pagine -> /login, API -> 401):
+#   /dashboard        ingresso della sezione Pianificatori di missione
+#   /mission-control  Lunar Mission Control Planner
+#   /api/auth/session utente della sessione
+#   API dei pianificatori: Mission Engine, strumenti scientifici, comunicazioni,
+#   termica e terreno (PROTECTED_PREFIXES).
+PROTECTED_PATHS = {"/dashboard", "/mission-control",
+                   "/api/auth/session"}
+PROTECTED_PREFIXES = ("/api/mission/", "/api/science/", "/api/communications/",
+                      "/api/thermal/", "/api/terrain/")
+
+
+def is_protected_path(path):
+    return path in PROTECTED_PATHS or path.startswith(PROTECTED_PREFIXES)
+# Token CSRF del modulo "Crea account amministratore" (double-submit: cookie
+# HttpOnly limitato a /auth/setup + campo nascosto), in aggiunta al controllo Origin.
+SETUP_CSRF_COOKIE = "lmc_setup_csrf"
+SETUP_CSRF_MAX_AGE_S = 30 * 60
+SETUP_ERRORS = {
+    "origin": "Richiesta rifiutata: origine non consentita.",
+    "csrf": "Modulo scaduto o non valido: riprova.",
+    "invalid": "Richiesta non valida.",
+    "username": "Nome utente non valido: 3-32 caratteri tra lettere, cifre, _ . -",
+    "password_short": f"La password deve avere almeno {MIN_PASSWORD_LENGTH} caratteri.",
+    "password_long": "Password troppo lunga (massimo 1024 caratteri).",
+    "password_same": "La password non può coincidere con il nome utente.",
+    "mismatch": "Le due password non coincidono.",
+    "store_unreadable": "Archivio utenti presente ma illeggibile: per sicurezza non viene "
+                        "sovrascritto. Controlla il file users.json nella cartella di configurazione.",
+}
+# Richieste automatiche di stato: verificano la sessione senza rinnovarla, così la
+# scadenza per inattività funziona anche con una pagina aperta che interroga il server.
+PASSIVE_PATHS = {"/api/health", "/api/services", "/api/auth/session"}
+
+# Classificazione degli errori di NASA/JPL Horizons (src.astronomy.AstronomyError.kind).
+EPHEMERIS_ERRORS = {
+    "timeout": (504, "jpl_timeout"),
+    "dns": (503, "jpl_unreachable"),
+    "connection": (503, "jpl_unreachable"),
+    "http": (502, "jpl_http_error"),
+    "upstream_error": (502, "jpl_rejected"),
+    "invalid_response": (502, "jpl_invalid_response"),
+    "data": (502, "jpl_invalid_response"),
+}
+JPL_PROBE_TTL_S = 60
+
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
@@ -181,6 +246,15 @@ class Handler(BaseHTTPRequestHandler):
             size = stat.st_size
         except OSError:
             return self.send_json(404, {"status": "error", "error": "Risorsa non trovata."})
+        if target.suffix.lower() == ".html":
+            # Le pagine non vanno mai in cache: un browser che ripristina la sessione
+            # non deve mostrare una dashboard "viva" (modello 3D dalla cache) quando il
+            # backend è spento, causa dei falsi "NetworkError" sulle API.
+            try:
+                body = target.read_bytes()
+            except OSError:
+                return self.send_json(404, {"status": "error", "error": "Risorsa non trovata."})
+            return self.send_bytes(200, body, content_type, head_only=head_only)
         # F11: validatore debole (dimensione + mtime). "no-cache" resta: il browser
         # rivalida sempre, ma un file invariato (es. GLB da 81,5 MB) torna 304 senza corpo.
         etag = f'W/"{size:x}-{stat.st_mtime_ns:x}"'
@@ -215,16 +289,316 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path.startswith("/api/"):
             return self.send_json(405, {"status": "error", "error": "Metodo non consentito."})
+        if self.require_session(parsed) is None:
+            return
         return self.send_static(unquote(parsed.path), head_only=True)
 
-    def send_json(self, status, payload):
+    def send_json(self, status, payload, extra_headers=None):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
+        for key, value in (extra_headers or {}).items():
+            self.send_header(key, value)
         self.end_headers()
         self.wfile.write(body)
+
+    def send_bytes(self, status, body, content_type, head_only=False, extra_headers=None):
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "same-origin")
+        for key, value in (extra_headers or {}).items():
+            self.send_header(key, value)
+        self.end_headers()
+        if not head_only:
+            self.wfile.write(body)
+
+    def redirect(self, location, extra_headers=None):
+        self.send_response(303 if self.command == "POST" else 302)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.send_header("Cache-Control", "no-store")
+        items = extra_headers.items() if isinstance(extra_headers, dict) else (extra_headers or [])
+        for key, value in items:
+            self.send_header(key, value)
+        self.end_headers()
+
+    # --- Autenticazione (sezione MISSION PLANNERS) ------------------------- #
+    @property
+    def auth(self):
+        """AuthManager del server; None solo per server creati senza autenticazione
+        (uso programmatico/test). L'avvio da main() la attiva sempre."""
+        return getattr(self.server, "auth", None)
+
+
+    def client_ip(self):
+        return self.client_address[0] if self.client_address else "?"
+
+    def current_session(self):
+        if self.auth is None:
+            return {"user": None}, None
+        token = token_from_cookie_header(self.headers.get("Cookie"))
+        passive = urlparse(self.path).path in PASSIVE_PATHS
+        return self.auth.validate(token, touch=not passive)
+
+    def require_session(self, parsed):
+        """Per i percorsi della sezione riservata restituisce la sessione oppure None dopo
+        aver risposto (401 o redirect al login). Tutti gli altri percorsi sono pubblici."""
+        path = parsed.path
+        if not is_protected_path(path):
+            return {"user": None, "public": True}
+        session, reason = self.current_session()
+        if session is not None:
+            return session
+        expired = reason == "expired"
+        if path.startswith("/api/"):
+            self.send_json(401, {
+                "status": "error",
+                "error_code": "session_expired" if expired else "auth_required",
+                "error": ("Sessione scaduta: accedere di nuovo." if expired
+                          else "Autenticazione richiesta."),
+                "login_url": "/login",
+            })
+            return None
+        target = path + (f"?{parsed.query}" if parsed.query else "")
+        location = f"/login?next={quote(target, safe='/')}" + ("&expired=1" if expired else "")
+        self.redirect(location)
+        return None
+
+    def own_origins(self):
+        host = self.headers.get("Host", "")
+        origins = {f"http://{host}", f"https://{host}"}
+        return origins
+
+    def origin_allowed(self):
+        """Protezione CSRF: le richieste POST devono provenire dalla piattaforma stessa."""
+        origin = self.headers.get("Origin")
+        if origin is None:
+            # Browser senza header Origin: si accetta solo se non è una richiesta cross-site.
+            return self.headers.get("Sec-Fetch-Site", "same-origin") in ("same-origin", "same-site", "none")
+        return origin in self.own_origins()
+
+    def _cookie(self, name):
+        for part in (self.headers.get("Cookie") or "").split(";"):
+            key, _, value = part.strip().partition("=")
+            if key == name and value:
+                return value.strip()
+        return None
+
+    def _setup_cookie(self, value, max_age):
+        parts = [f"{SETUP_CSRF_COOKIE}={value}", "Path=/auth/setup", "HttpOnly",
+                 "SameSite=Strict", f"Max-Age={max_age}"]
+        if self.auth is not None and self.auth.secure_cookie:
+            parts.append("Secure")
+        return "; ".join(parts)
+
+    @staticmethod
+    def _keep_block(page, keep, drop):
+        """Lascia nella pagina solo il blocco <!--KEEP_START-->...<!--KEEP_END-->."""
+        page = re.sub(rf"<!--{drop}_START-->.*?<!--{drop}_END-->", "", page, flags=re.S)
+        return page.replace(f"<!--{keep}_START-->", "").replace(f"<!--{keep}_END-->", "")
+
+    # Riquadro "Credenziali di accesso" della pagina di login: solo testo informativo,
+    # non modifica né legge il sistema di autenticazione. Viene inserito lato server
+    # soltanto in ambiente locale/demo, così nella versione pubblica non compare
+    # nemmeno nel sorgente HTML. LUNAR_DEMO_CREDENTIALS=1 lo forza (demo),
+    # =0 lo disattiva sempre; senza variabile vale il rilevamento locale.
+    DEMO_CREDENTIALS = ("admin", "123456789101112")
+    _LOCAL_HOSTNAMES = {"localhost", "127.0.0.1", "::1"}
+
+    def _show_demo_credentials(self):
+        flag = os.environ.get("LUNAR_DEMO_CREDENTIALS", "").strip().lower()
+        if flag in ("0", "false", "no", "off"):
+            return False
+        if flag in ("1", "true", "yes", "on"):
+            return True
+        # Rilevamento locale: server in ascolto su loopback, client loopback, Host
+        # locale e nessuna intestazione di proxy/tunnel (es. ngrok, reverse proxy).
+        if not _is_loopback(str(self.server.server_address[0])):
+            return False
+        if not _is_loopback(self.client_ip()):
+            return False
+        if any(self.headers.get(h) for h in ("X-Forwarded-For", "X-Forwarded-Host",
+                                             "Forwarded", "X-Real-IP")):
+            return False
+        host = (self.headers.get("Host") or "").strip().lower()
+        hostname = host[1:host.index("]")] if host.startswith("[") and "]" in host \
+            else host.rsplit(":", 1)[0]
+        return hostname in self._LOCAL_HOSTNAMES
+
+    def _demo_credentials_html(self):
+        if not self._show_demo_credentials():
+            return ""
+        user, password = (html.escape(v, quote=True) for v in self.DEMO_CREDENTIALS)
+        return ('<aside class="login-demo" aria-label="Credenziali di accesso (ambiente demo)">'
+                '<p class="login-demo-title">Credenziali di accesso</p>'
+                f'<dl><dt>Username:</dt><dd><code>{user}</code></dd>'
+                f'<dt>Password:</dt><dd><code>{password}</code></dd></dl></aside>')
+
+    def render_login(self, query):
+        try:
+            page = LOGIN_PAGE.read_text(encoding="utf-8")
+        except OSError:
+            return self.send_json(500, {"status": "error", "error": "Pagina di login assente."})
+        auth = self.auth
+        next_path = safe_next_path((query.get("next") or [None])[0])
+        notices = []
+        extra_headers = None
+        setup_mode = auth is not None and not auth.configured
+        if setup_mode:
+            # Primo accesso: solo il modulo di creazione dell'account amministratore.
+            page = self._keep_block(page, "SETUP", "LOGIN")
+            setup_error = (query.get("setup_error") or [None])[0]
+            if setup_error in SETUP_ERRORS:
+                notices.append(("error", SETUP_ERRORS[setup_error]))
+            prefill = (query.get("u") or [""])[0]
+            if not USERNAME_RE.match(prefill):
+                prefill = ""
+            csrf_token = secrets.token_urlsafe(32)
+            extra_headers = {"Set-Cookie": self._setup_cookie(csrf_token, SETUP_CSRF_MAX_AGE_S)}
+            page = (page.replace("__CSRF__", csrf_token)
+                        .replace("__USERNAME__", html.escape(prefill, quote=True))
+                        .replace("__MINLEN__", str(MIN_PASSWORD_LENGTH)))
+        else:
+            page = self._keep_block(page, "LOGIN", "SETUP")
+            if (query.get("setup_error") or [None])[0] == "already_configured":
+                notices.append(("warn", "Esiste già un account: accedi con le tue credenziali."))
+            error = (query.get("error") or [None])[0]
+            if error == "invalid":
+                notices.append(("error", "Nome utente o password non corretti."))
+            elif error == "locked":
+                notices.append(("error", "Troppi tentativi non riusciti: accesso temporaneamente "
+                                         "bloccato (15 minuti)."))
+            elif error == "origin":
+                notices.append(("error", "Richiesta di accesso rifiutata: origine non consentita."))
+            if (query.get("expired") or [None])[0]:
+                notices.append(("warn", "La sessione è scaduta. Accedi di nuovo."))
+            if (query.get("logged_out") or [None])[0]:
+                notices.append(("ok", "Disconnessione completata."))
+        notice_html = "".join(
+            f'<p class="login-notice" data-kind="{kind}" role="{"alert" if kind == "error" else "status"}">{text}</p>'
+            for kind, text in notices)
+        demo_html = "" if setup_mode else self._demo_credentials_html()
+        page = (page.replace("<!--LOGIN_NOTICES-->", notice_html)
+                    .replace("<!--DEMO_CREDENTIALS-->", demo_html)
+                    .replace("__NEXT__", html.escape(next_path, quote=True)))
+        return self.send_bytes(200, page.encode("utf-8"), CONTENT_TYPES[".html"],
+                               extra_headers=extra_headers)
+
+    def handle_setup_post(self):
+        """Crea il primo account amministratore (solo con archivio utenti vuoto)."""
+        auth = self.auth
+        if auth is None:
+            return self.redirect("/dashboard")
+        if auth.configured:
+            # Endpoint chiuso: non consente di creare ulteriori account.
+            return self.redirect("/login?setup_error=already_configured")
+        if not self.origin_allowed():
+            return self.redirect("/login?setup_error=origin")
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+        if length <= 0 or length > 8192:
+            return self.redirect("/login?setup_error=invalid")
+        form = parse_qs(self.rfile.read(length).decode("utf-8", "replace"), keep_blank_values=True)
+        field = lambda name: (form.get(name) or [""])[0]  # noqa: E731
+        username = field("username").strip()
+        password = field("password")
+        confirm = field("password_confirm")
+        next_path = safe_next_path(field("next") or None)
+
+        def fail(code):
+            prefill = f"&u={quote(username)}" if USERNAME_RE.match(username) else ""
+            return self.redirect(f"/login?setup_error={code}{prefill}&next={quote(next_path, safe='/')}")
+
+        cookie_token = self._cookie(SETUP_CSRF_COOKIE) or ""
+        form_token = field("csrf_token")
+        if not cookie_token or not form_token or len(form_token) > 128 or \
+                not hmac.compare_digest(cookie_token.encode(), form_token.encode()):
+            return fail("csrf")
+        if password != confirm:
+            return fail("mismatch")
+        try:
+            auth.users.create_first_user(username, password)
+        except FirstUserError as exc:
+            if exc.code == "already_configured":
+                return self.redirect("/login?setup_error=already_configured")
+            return fail(exc.code if exc.code in SETUP_ERRORS else "invalid")
+        except OSError:
+            return fail("store_unreadable")
+        # Accesso immediato con il normale meccanismo di sessione.
+        clear = ("Set-Cookie", self._setup_cookie("", 0))
+        token, _ = auth.login(username, password, self.client_ip())
+        if token is None:
+            return self.redirect("/login", [clear])
+        return self.redirect(next_path, [clear, ("Set-Cookie", auth.session_cookie(token))])
+
+    def handle_login_post(self):
+        auth = self.auth
+        if auth is None:
+            return self.redirect("/dashboard")
+        if not self.origin_allowed():
+            return self.redirect("/login?error=origin")
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+        if length <= 0 or length > 8192:
+            return self.redirect("/login?error=invalid")
+        form = parse_qs(self.rfile.read(length).decode("utf-8", "replace"), keep_blank_values=True)
+        username = (form.get("username") or [""])[0]
+        password = (form.get("password") or [""])[0]
+        next_path = safe_next_path((form.get("next") or [None])[0])
+        token, error = auth.login(username, password, self.client_ip())
+        if token is None:
+            if error == "invalid":
+                time.sleep(0.5)  # rallenta i tentativi automatici
+            return self.redirect(f"/login?error={error}&next={quote(next_path, safe='/')}")
+        return self.redirect(next_path, {"Set-Cookie": auth.session_cookie(token)})
+
+    def handle_logout_post(self):
+        auth = self.auth
+        if auth is None:
+            return self.redirect("/")
+        if not self.origin_allowed():
+            return self.send_json(403, {"status": "error", "error": "Origine non consentita."})
+        auth.logout(token_from_cookie_header(self.headers.get("Cookie")))
+        # Il logout chiude solo la sezione riservata: si torna alla piattaforma pubblica.
+        return self.redirect("/", {"Set-Cookie": auth.clear_cookie()})
+
+    # --- Stato dei servizi -------------------------------------------------- #
+    def jpl_status(self, refresh=False):
+        cache = getattr(self.server, "jpl_probe_cache", None)
+        now = time.monotonic()
+        if not refresh and cache and now - cache[0] < JPL_PROBE_TTL_S:
+            return cache[1]
+        result = probe_horizons()
+        self.server.jpl_probe_cache = (now, result)
+        return result
+
+    def handle_services(self, query):
+        # Pubblico (lo usa anche la piattaforma pubblica per il ripristino JPL):
+        # stato della sessione solo con sessione valida; senza
+        # sessione la sonda JPL non viene forzata e resta in cache per JPL_PROBE_TTL_S.
+        session, _ = self.current_session()
+        refresh = (query.get("refresh") or ["0"])[0] == "1" and session is not None
+        payload = {
+            "status": "ok",
+            "backend": {"available": True, "server_time_utc": datetime.now(timezone.utc).isoformat()},
+            "jpl_horizons": self.jpl_status(refresh),
+            "authenticated": session is not None,
+        }
+        if session is None:
+            return self.send_json(200, payload)
+        payload["session"] = {"user": session.get("user"),
+                              "idle_timeout_minutes": (self.auth.idle_s / 60) if self.auth else None}
+        return self.send_json(200, payload)
 
     def read_json_body(self, limit=1_000_000):
         length = int(self.headers.get("Content-Length", "0"))
@@ -373,6 +747,19 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/auth/login":
+            return self.handle_login_post()
+        if parsed.path == "/auth/setup":
+            return self.handle_setup_post()
+        if parsed.path == "/auth/logout":
+            return self.handle_logout_post()
+        # Le API POST dei pianificatori richiedono la sessione (require_session);
+        # per tutte resta il controllo dell'origine (CSRF).
+        if self.require_session(parsed) is None:
+            return
+        if self.auth is not None and not self.origin_allowed():
+            return self.send_json(403, {"status": "error", "error_code": "origin_forbidden",
+                                        "error": "Origine della richiesta non consentita."})
         if parsed.path in science_api.POST_ROUTES:
             return self.handle_science_post(parsed.path)
         if parsed.path in ("/api/mission/validate", "/api/mission/runs"):
@@ -402,6 +789,23 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/health":
+            # Pubblico e minimale: permette alla UI di distinguere "backend spento"
+            # (errore di rete) da "sessione scaduta" (401) senza esporre dati.
+            session, _ = self.current_session()
+            return self.send_json(200, {"status": "ok", "backend": "ok",
+                                        "authenticated": session is not None,
+                                        "auth_enabled": self.auth is not None})
+        if parsed.path == "/login":
+            return self.render_login(parse_qs(parsed.query))
+        session = self.require_session(parsed)
+        if session is None:
+            return
+        if parsed.path == "/api/services":
+            return self.handle_services(parse_qs(parsed.query))
+        if parsed.path == "/api/auth/session":
+            return self.send_json(200, {"status": "ok", "user": session.get("user"),
+                                        "auth_enabled": self.auth is not None})
         if parsed.path == "/api/science/rasters":
             return self.send_json(200, {"status": "ok", **science_api.list_rasters()})
         if parsed.path == "/api/sites":
@@ -465,6 +869,8 @@ class Handler(BaseHTTPRequestHandler):
 
             latitude, longitude = SITES[site]
 
+            # Coordinate e periodo sono quelli selezionati nell'interfaccia (sito,
+            # inizio UTC, durata): nessun valore sostitutivo o dimostrativo.
             sun = query_observations(
                 "10", latitude, longitude, start, hours=hours, step="1h"
             )
@@ -477,7 +883,8 @@ class Handler(BaseHTTPRequestHandler):
             common_times = [o.time_utc for o in sun if o.time_utc in earth_by_time]
             if not common_times:
                 raise AstronomyError(
-                    "Nessun timestamp comune tra le effemeridi di Sole e Terra."
+                    "Nessun timestamp comune tra le effemeridi di Sole e Terra.",
+                    kind="data",
                 )
 
             sun_by_time = {o.time_utc: o for o in sun}
@@ -539,12 +946,25 @@ class Handler(BaseHTTPRequestHandler):
                 ),
             })
 
-        except (ValueError, TypeError) as exc:
-            return self.send_json(400, {"status": "error", "error": str(exc)})
-        except Exception as exc:
-            return self.send_json(502, {
+        except AstronomyError as exc:
+            kind = getattr(exc, "kind", "invalid_response")
+            http_status, code = EPHEMERIS_ERRORS.get(kind, (502, "jpl_invalid_response"))
+            self.server.jpl_probe_cache = None  # lo stato JPL va ricontrollato
+            return self.send_json(http_status, {
                 "status": "error",
-                "error": f"Calcolo astronomico non disponibile: {exc}",
+                "error_code": code,
+                "source": "NASA/JPL Horizons",
+                "error": str(exc),
+                "retryable": kind in ("timeout", "dns", "connection", "http"),
+            })
+        except (ValueError, TypeError) as exc:
+            return self.send_json(400, {"status": "error", "error_code": "invalid_request",
+                                        "error": str(exc)})
+        except Exception as exc:
+            return self.send_json(500, {
+                "status": "error",
+                "error_code": "backend_error",
+                "error": f"Errore interno del backend durante il calcolo: {type(exc).__name__}: {exc}",
             })
 
 
@@ -576,9 +996,17 @@ def _is_loopback(host):
         return False
 
 
-def create_server(host, port):
-    """Crea il server HTTP; solleva OSError se la porta non è disponibile."""
-    return ThreadingHTTPServer((host, port), Handler)
+def create_server(host, port, auth=None):
+    """Crea il server HTTP; solleva OSError se la porta non è disponibile.
+
+    ``auth`` è l'AuthManager della sezione MISSION PLANNERS. ``main()`` lo passa
+    sempre; ``auth=None`` (nessuna autenticazione) è riservato all'uso
+    programmatico locale, ad esempio la suite di test esistente.
+    """
+    server = ThreadingHTTPServer((host, port), Handler)
+    server.auth = auth
+    server.jpl_probe_cache = None
+    return server
 
 
 def _run_desktop(url, server, server_thread):
@@ -615,7 +1043,12 @@ def _run_desktop(url, server, server_thread):
 def main(argv=None):
     args = parse_args(argv)
     try:
-        server = create_server(args.host, args.port)
+        auth = AuthManager()
+    except OSError as exc:
+        print(f"[ERRORE] Archivio di autenticazione non accessibile: {exc}", file=sys.stderr)
+        return 2
+    try:
+        server = create_server(args.host, args.port, auth=auth)
     except OSError as exc:
         if exc.errno == errno.EADDRINUSE:
             print(f"[ERRORE] La porta {args.port} su {args.host} è già in uso.\n"
@@ -633,12 +1066,31 @@ def main(argv=None):
     url = f"http://{display_host}:{bound_port}/"
 
     if not _is_loopback(args.host):
-        print(f"[ATTENZIONE] Server in ascolto su {args.host}: la UI è raggiungibile da altre "
-              "macchine della rete e non prevede autenticazione.", file=sys.stderr)
+        print(f"[ATTENZIONE] Server in ascolto su {args.host}: la piattaforma è raggiungibile da "
+              "altre macchine. Il login è attivo ma il traffico è HTTP in chiaro: usare una rete "
+              "fidata o un reverse proxy HTTPS (e LUNAR_COOKIE_SECURE=1).", file=sys.stderr)
+    if not auth.configured:
+        print("[INFO] Nessun account configurato: la piattaforma pubblica è già utilizzabile.\n"
+              "       Per i Pianificatori di missione apri /dashboard nel browser\n"
+              "       e crea l'account amministratore (archivio: "
+              f"{auth.users.path}).")
+
+
+    # SIGTERM (kill, chiusura della sessione) esegue la stessa pulizia di Ctrl+C
+    # (arresto del Mission Engine e chiusura del server).
+    def _terminate(signum, frame):
+        raise KeyboardInterrupt
+    try:
+        signal.signal(signal.SIGTERM, _terminate)
+        if hasattr(signal, "SIGHUP"):
+            signal.signal(signal.SIGHUP, _terminate)
+    except ValueError:
+        pass  # non nel thread principale (uso programmatico)
 
     server_thread = Thread(target=server.serve_forever, name="lunar-http-server", daemon=True)
     server_thread.start()
-    print(f"Lunar South Pole Planner — Web UI attiva su {url}  (Ctrl+C per terminare)",
+    print(f"Lunar South Pole Planner — piattaforma pubblica su {url}  · Pianificatori di missione "
+          f"(login) su {url}dashboard  (Ctrl+C per terminare)",
           flush=True)
 
     try:

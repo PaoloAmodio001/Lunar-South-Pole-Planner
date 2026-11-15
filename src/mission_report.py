@@ -32,9 +32,11 @@ def build_mission_report(
     project_root: str | Path | None = None,
     rover_plan_path: str | Path | None = None,
     energy_assessment_path: str | Path | None = None,
+    solar_energy_path: str | Path | None = None,
     journal_path: str | Path | None = None,
     journal_enabled: bool | None = None,
     run_id: str | None = None,
+    psystem_view_path: str | Path | None = None,
 ) -> dict:
     """Create a status report without performing network calls or modifying DEMs."""
     root = Path(project_root).resolve() if project_root is not None else PROJECT_ROOT
@@ -105,6 +107,67 @@ def build_mission_report(
                 "assumptions": energy_payload.get("assumptions", []),
             }
 
+    # Solar Energy Engine: riepilogo fedele del report, nessun ricalcolo.
+    solar_source = Path(solar_energy_path) if solar_energy_path is not None else None
+    if solar_source is not None and not solar_source.is_absolute():
+        solar_source = root / solar_source
+    solar_payload, solar_error = (
+        _read_json(solar_source) if solar_source is not None else (None, None)
+    )
+    solar_summary = None
+    if isinstance(solar_payload, dict):
+        summary_block = solar_payload.get("summary") or {}
+        autonomy_block = solar_payload.get("autonomy") or {}
+        deficits = solar_payload.get("deficit_intervals") or {}
+        solar_summary = {
+            "status": solar_payload.get("status"),
+            "sustainability": summary_block.get("sustainability"),
+            "evaluated_hours": summary_block.get("evaluated_hours"),
+            "production_wh_evaluated": summary_block.get("production_wh_evaluated"),
+            "consumption_wh_by_category": summary_block.get("consumption_wh_by_category"),
+            "net_energy_wh": summary_block.get("net_energy_wh"),
+            "final_soc_wh": summary_block.get("final_soc_wh"),
+            "min_reserve_margin_wh": summary_block.get("min_reserve_margin_wh"),
+            "unmet_load_wh": summary_block.get("unmet_load_wh"),
+            "reserve_respected": summary_block.get("reserve_respected"),
+            "net_deficit_interval_count": len(deficits.get("net_deficit") or []),
+            "below_reserve_interval_count": len(deficits.get("below_reserve") or []),
+            "time_to_reserve_hours": autonomy_block.get("time_to_reserve_hours"),
+            "missing_inputs": [
+                item.get("parameter") for item in solar_payload.get("missing_inputs") or []
+                if isinstance(item, dict)
+            ],
+            "invalid_inputs": [
+                item.get("parameter") for item in solar_payload.get("invalid_inputs") or []
+                if isinstance(item, dict)
+            ],
+            "scientifically_validated": False,
+        }
+
+    psystem_section = {"status": "not_configured"}
+    if psystem_view_path is not None:
+        view, view_error = _read_json(Path(psystem_view_path)) if Path(psystem_view_path).is_file() else (None, "file mancante")
+        if view is None:
+            psystem_section = {"status": "unreadable", "read_error": view_error}
+        else:
+            psystem_section = {
+                "status": "available",
+                "path": str(psystem_view_path),
+                "connected_to_remote_psystem": view.get("connected_to_remote_psystem", False),
+                "verification": view.get("committee_verified_with"),
+                "records_verified": view.get("records_verified"),
+                "records_rejected": view.get("records_rejected"),
+                "outbox_summary": view.get("outbox_summary"),
+                "protocol_conflicts": view.get("protocol_conflicts", []),
+                "version_conflicts": view.get("version_conflicts", []),
+                "provenance": [
+                    {k: r.get(k) for k in ("entity", "producer", "origin", "version", "event_id", "nonce",
+                                           "body_sha256", "certificate_phase", "certificate_votes",
+                                           "committee_epoch", "integrity")}
+                    for r in view.get("latest_by_entity", [])
+                ],
+                "nodes": view.get("nodes", []),
+            }
     journal_source = Path(journal_path) if journal_path is not None else Path("reports/mission_events.jsonl")
     if not journal_source.is_absolute():
         journal_source = root / journal_source
@@ -189,19 +252,28 @@ def build_mission_report(
             "path": str(energy_source) if energy_source is not None else None,
             "read_error": energy_error,
         },
+        "solar_energy": {
+            "available": solar_summary is not None,
+            "summary": solar_summary,
+            "path": str(solar_source) if solar_source is not None else None,
+            "read_error": solar_error,
+        },
         "psystem_journal": {
             "status": journal_status,
             "path": journal_display_path,
             "event_lines": journal_count,
             "current_run_event_lines": journal_run_event_count,
             "read_error": journal_error,
-            "remote_node_connected": False,
+            "remote_node_connected": bool(psystem_section.get("connected_to_remote_psystem")),
         },
+        "psystem_integration": psystem_section,
         "limitations": [
             "Geodetic alignment of LOLA/LROC and candidate coordinates is not independently validated.",
             "No power-system model, RF link budget, rover dynamics, or multi-rover coordination is certified by this report.",
             "Missing measurements remain missing; no placeholder scientific values are inferred.",
-            "The P-System journal is local unless a real remote protocol integration is configured separately.",
+            ("Mission events are certified by a P-System committee: see psystem_integration."
+             if psystem_section.get("connected_to_remote_psystem") else
+             "The P-System journal is local unless the 'psystem' section of the configuration is enabled."),
         ],
     }
 
@@ -307,6 +379,29 @@ def write_mission_report(report: dict, output_dir: str | Path = "reports") -> tu
         if energy.get("read_error"):
             lines.append(f"- Motivo: {energy['read_error']}")
 
+    lines += ["", "## Bilancio energetico solare (Solar Energy Engine)", ""]
+    solar = report.get("solar_energy", {})
+    solar_summary = solar.get("summary")
+    if solar.get("available") and isinstance(solar_summary, dict):
+        lines.append(f"- Stato del report: {solar_summary.get('status', 'n/d')}")
+        lines.append(f"- Sostenibilità: {solar_summary.get('sustainability', 'n/d')}")
+        lines.append(f"- Ore valutate: {solar_summary.get('evaluated_hours', 'n/d')}")
+        lines.append(f"- Produzione utilizzabile: {solar_summary.get('production_wh_evaluated', 'n/d')} Wh")
+        lines.append(f"- Energia netta: {solar_summary.get('net_energy_wh', 'n/d')} Wh")
+        lines.append(f"- Stato di carica finale: {solar_summary.get('final_soc_wh', 'n/d')} Wh")
+        lines.append(f"- Margine minimo sulla riserva: {solar_summary.get('min_reserve_margin_wh', 'n/d')} Wh")
+        lines.append(f"- Carico non servito: {solar_summary.get('unmet_load_wh', 'n/d')} Wh")
+        lines.append(f"- Intervalli di deficit netto: {solar_summary.get('net_deficit_interval_count', 'n/d')}")
+        if solar_summary.get("missing_inputs"):
+            lines.append("- Parametri mancanti: " + ", ".join(solar_summary["missing_inputs"]))
+        if solar_summary.get("invalid_inputs"):
+            lines.append("- Parametri non validi: " + ", ".join(solar_summary["invalid_inputs"]))
+        lines.append("- Avvertenza: modello preliminare non validato scientificamente.")
+    else:
+        lines.append("- Bilancio solare non disponibile.")
+        if solar.get("read_error"):
+            lines.append(f"- Motivo: {solar['read_error']}")
+
     journal_status_labels = {
         "disabled": "Disabilitato dalla configurazione",
         "available": "Disponibile",
@@ -325,6 +420,28 @@ def write_mission_report(report: dict, output_dir: str | Path = "reports") -> tu
         f"- Eventi dell'esecuzione corrente: {journal.get('current_run_event_lines', 0)}",
         f"- Percorso journal: {journal.get('path') or 'non applicabile'}",
         f"- Nodo remoto collegato: {journal.get('remote_node_connected', False)}", "",
+    ]
+    integration = report.get("psystem_integration", {})
+    if integration.get("status") == "available":
+        summary = integration.get("outbox_summary") or {}
+        lines += [
+            "### Record certificati dal comitato P-System", "",
+            f"- Verifica: {integration.get('verification')}",
+            f"- Record verificati sul nodo: {integration.get('records_verified')}; rifiutati: "
+            f"{integration.get('records_rejected')}",
+            f"- Pubblicazioni di questo planner: " + ", ".join(f"{k} {v}" for k, v in summary.items()),
+            f"- Versioni decise dal protocollo al posto di una propria: {len(integration.get('protocol_conflicts', []))}",
+            "",
+            "| Entità | Produttore | Versione | Evento | Certificato | Integrità |",
+            "|---|---|---|---|---|---|",
+        ]
+        for item in integration.get("provenance", []):
+            lines.append(
+                f"| {item.get('entity')} | {item.get('producer')} | {item.get('version')} | "
+                f"`{str(item.get('event_id'))[:12]}` | {item.get('certificate_phase')}, "
+                f"{item.get('certificate_votes')} firme | {item.get('integrity')} |")
+        lines.append("")
+    lines += [
         "## Limiti e avvertenze", "",
     ]
     lines.extend(f"- {item}" for item in report.get("limitations", []))
@@ -570,6 +687,11 @@ def write_mission_report(report: dict, output_dir: str | Path = "reports") -> tu
             "Valutazione energetica",
             "rover_energy",
             "rover_energy",
+        ),
+        (
+            "Bilancio energetico solare",
+            "solar_energy",
+            "solar_energy",
         ),
     ]
 

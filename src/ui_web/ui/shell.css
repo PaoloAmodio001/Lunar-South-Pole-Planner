@@ -86,6 +86,19 @@
   font-weight: 500; letter-spacing: 0; padding: 6px 12px;
 }
 [data-ui="v2"] #changeProfile:hover { border-color: var(--ui-cyan); }
+/* Mission Planners: ritorno alla dashboard e logout (2026-11-15) */
+[data-ui="v2"] .shell-link {
+  flex: none; color: var(--ui-cyan); text-decoration: none;
+  font-size: var(--ui-text-12); padding: 6px 10px;
+  border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-control);
+}
+[data-ui="v2"] .shell-link:hover, [data-ui="v2"] .shell-link:focus-visible { border-color: var(--ui-cyan); }
+[data-ui="v2"] .shell-logout { margin: 0; flex: none; }
+[data-ui="v2"] .shell-logout button {
+  margin: 0; background: transparent; color: var(--ui-text);
+  border: 1px solid var(--ui-rule); font-weight: 500; letter-spacing: 0; padding: 6px 12px;
+}
+[data-ui="v2"] .shell-logout button:hover { border-color: var(--ui-nogo); }
 
 /* ---------- Griglia del Pianificatore (desktop ≥ 1001 px: lo splitter è attivo) ---------- */
 [data-ui="v2"] main {

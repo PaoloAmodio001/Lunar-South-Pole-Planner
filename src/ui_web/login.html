@@ -1,0 +1,70 @@
+<!-- Last updated: 2026-11-15 -->
+<!doctype html>
+<html lang="it" data-ui="v2">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="same-origin">
+<title>Accesso · Mission Planners</title>
+<link rel="stylesheet" href="/ui/tokens.css">
+<link rel="stylesheet" href="/ui/base.css">
+<link rel="stylesheet" href="/ui/shell.css">
+<link rel="stylesheet" href="/ui/portal.css">
+<link rel="icon" href="/ui/icon.svg" type="image/svg+xml">
+</head>
+<body class="portal">
+<header class="shell-bar">
+ <div class="shell-brand">
+  <svg class="shell-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 18.5c4 1.6 8.4 2.4 13 2.4s9-.8 13-2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="25.6" r="2.4" fill="#5CCFE6"/></svg>
+  <span class="shell-title">Lunar Mission Control</span>
+ </div>
+ <a class="shell-link" href="/" title="Torna alla piattaforma pubblica (accesso libero)">&larr; Piattaforma pubblica</a>
+</header>
+
+<div class="login-wrap" role="main">
+ <!--LOGIN_START-->
+ <section class="portal-panel login-card" aria-labelledby="loginTitle">
+  <p class="eyebrow">Mission Planners · accesso riservato</p>
+  <h1 id="loginTitle">Accedi</h1>
+  <p class="lede">Un unico accesso per i Pianificatori di missione (Lunar Mission Control Planner). Il resto della piattaforma è pubblico e non richiede account.</p>
+  <!--LOGIN_NOTICES-->
+  <form class="login-form" method="post" action="/auth/login" autocomplete="on">
+   <input type="hidden" name="next" value="__NEXT__">
+   <label>Nome utente
+    <input name="username" type="text" autocomplete="username" required minlength="3" maxlength="32" autocapitalize="none" spellcheck="false" autofocus>
+   </label>
+   <label>Password
+    <input name="password" type="password" autocomplete="current-password" required maxlength="1024">
+   </label>
+   <button class="btn btn-primary" type="submit">Accedi</button>
+  </form>
+  <!--DEMO_CREDENTIALS-->
+  <p class="login-small">La sessione scade dopo un periodo di inattività.</p>
+ </section>
+ <!--LOGIN_END-->
+ <!--SETUP_START-->
+ <section class="portal-panel login-card" aria-labelledby="setupTitle">
+  <p class="eyebrow">Mission Planners · primo accesso</p>
+  <h1 id="setupTitle">Crea account amministratore</h1>
+  <p class="lede">Non esiste ancora alcun account. Crea l'account amministratore: darà accesso ai Pianificatori di missione (Lunar Mission Control Planner).</p>
+  <!--LOGIN_NOTICES-->
+  <form class="login-form" method="post" action="/auth/setup" autocomplete="off">
+   <input type="hidden" name="next" value="__NEXT__">
+   <input type="hidden" name="csrf_token" value="__CSRF__">
+   <label>Nome utente
+    <input name="username" type="text" autocomplete="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_.\-]{3,32}" title="3-32 caratteri tra lettere, cifre, _ . -" value="__USERNAME__" autocapitalize="none" spellcheck="false" autofocus>
+   </label>
+   <label>Password (almeno __MINLEN__ caratteri)
+    <input name="password" type="password" autocomplete="new-password" required minlength="__MINLEN__" maxlength="1024">
+   </label>
+   <label>Conferma password
+    <input name="password_confirm" type="password" autocomplete="new-password" required minlength="__MINLEN__" maxlength="1024">
+   </label>
+   <button class="btn btn-primary" type="submit">Crea account e accedi</button>
+  </form>
+  <p class="login-small">Questo modulo è disponibile solo finché non esiste alcun account. La password è salvata soltanto come hash scrypt, fuori dal repository.</p>
+ </section>
+ <!--SETUP_END-->
+</div>
+</body>
+</html>
