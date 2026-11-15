@@ -1,0 +1,96 @@
+/* F9 · Stage del globo: marker dei siti, controlli della vista, avanzamento reale, errore, didascalia luce.
+   Rollback selettivo: rimuovere il <link> a /ui/globe.css (gli elementi restano funzionanti, senza stile). */
+
+[data-ui="v2"] .panel.center { background: #050A12; overflow: hidden; }
+[data-ui="v2"] .scene {
+  height: 100%;
+  background: radial-gradient(circle at 50% 46%, #0C1828 0%, #050A12 62%);
+}
+[data-ui="v2"] #viewport { cursor: grab; touch-action: none; }
+[data-ui="v2"] #viewport:active { cursor: grabbing; }
+[data-ui="v2"] #viewport:focus-visible { outline-offset: -3px; }
+
+/* Marker: pulsanti DOM posizionati dalla proiezione 3D → schermo (ui/globe-markers.js) */
+[data-ui="v2"] .globe-markers { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+[data-ui="v2"] .globe-marker {
+  position: absolute; left: 0; top: 0;
+  display: flex; align-items: center; gap: 8px;
+  min-height: 0; padding: 0; margin: -7px 0 0 -7px;
+  background: none; border: 0; border-radius: 0;
+  color: var(--ui-text); pointer-events: auto; cursor: pointer;
+  will-change: transform;
+}
+[data-ui="v2"] .globe-marker-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--ui-text);
+  background: rgba(5, 10, 18, .55);
+  box-shadow: 0 0 0 1px rgba(5, 10, 18, .9);
+  flex: none;
+}
+[data-ui="v2"] .globe-marker-label {
+  font-size: var(--ui-text-12); font-weight: 500;
+  padding: 2px 6px; border-radius: var(--ui-radius-pill);
+  background: rgba(5, 10, 18, .78);
+  white-space: nowrap;
+}
+[data-ui="v2"] .globe-marker.label-hidden .globe-marker-label { display: none; }
+[data-ui="v2"] .globe-marker.label-hidden:is(:hover, :focus-visible) .globe-marker-label { display: block; }
+[data-ui="v2"] .globe-marker:hover .globe-marker-dot { border-color: var(--ui-cyan); }
+[data-ui="v2"] .globe-marker.is-selected { z-index: 2; }
+[data-ui="v2"] .globe-marker.is-selected .globe-marker-dot { border-color: var(--ui-cyan); background: var(--ui-cyan); }
+[data-ui="v2"] .globe-marker.is-selected .globe-marker-label { color: var(--ui-cyan); }
+[data-ui="v2"] .globe-marker:focus-visible { outline-offset: 4px; }
+
+/* Controlli della vista */
+[data-ui="v2"] .globe-tools {
+  position: absolute; left: var(--ui-space-4); bottom: var(--ui-space-4);
+  display: flex; gap: 4px; z-index: 2;
+}
+[data-ui="v2"] .globe-tools button {
+  min-width: 36px; min-height: 36px; padding: 6px 10px;
+  background: rgba(25, 29, 35, .88);
+  font-size: var(--ui-text-12); font-weight: 500;
+}
+[data-ui="v2"] .globe-tools button:is(#globeZoomIn, #globeZoomOut) { font-size: var(--ui-text-17); line-height: 1; }
+
+/* Avanzamento reale del GLB (GLTFLoader onProgress) */
+[data-ui="v2"] .globe-progress {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(320px, calc(100% - 32px)); z-index: 2;
+  padding: var(--ui-space-4);
+  background: rgba(25, 29, 35, .92);
+  border: 1px solid var(--ui-rule); border-radius: var(--ui-radius-panel);
+}
+[data-ui="v2"] .globe-progress-track {
+  height: 4px; background: var(--ui-rule); border-radius: 2px; overflow: hidden;
+}
+[data-ui="v2"] .globe-progress-track span {
+  display: block; height: 100%; width: var(--progress, 0%);
+  background: var(--ui-cyan);
+  transition: width .2s linear;
+}
+[data-ui="v2"] .globe-progress p { margin: 8px 0 0; font-size: var(--ui-text-12); color: var(--ui-text-muted); }
+
+[data-ui="v2"] .globe-error {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(380px, calc(100% - 32px)); z-index: 3;
+  padding: var(--ui-space-4);
+  background: var(--ui-anthracite);
+  border: 1px solid var(--ui-nogo); border-radius: var(--ui-radius-panel);
+}
+[data-ui="v2"] .globe-error p { margin: 0 0 12px; }
+
+/* Piede dello stage: sito e didascalia della luce indicativa */
+[data-ui="v2"] .scenefoot {
+  left: var(--ui-space-4); right: var(--ui-space-4); top: var(--ui-space-3); bottom: auto;
+  align-items: flex-end; gap: var(--ui-space-4);
+  font-size: var(--ui-text-12); letter-spacing: 0; color: var(--ui-text-muted);
+}
+[data-ui="v2"] #siteLabel { display: none; }  /* il sito è già nella scheda e nei marker */
+[data-ui="v2"] .globe-light-note { max-width: 40ch; text-align: left; }
+
+@media (max-width: 767px) {
+  [data-ui="v2"] .globe-tools { bottom: var(--ui-space-3); left: var(--ui-space-3); }
+  [data-ui="v2"] .globe-tools button { min-width: 44px; min-height: 44px; }
+  [data-ui="v2"] .globe-light-note { max-width: none; text-align: left; margin-left: 0; }
+}

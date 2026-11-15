@@ -1,0 +1,46 @@
+/* F9 · Base globale della UI v2. Riferimento: F9_DESIGN_PROPOSAL.md §4, §9.
+   Ambito volutamente limitato (passo 1): famiglia tipografica, cifre tabulari, focus visibile,
+   selezione, attributo [hidden] e reduced motion. Non modifica layout, dimensioni o colori dei
+   componenti esistenti, che appartengono ai passi successivi.
+   Tutte le regole valgono solo sotto <html data-ui="v2">. Rollback: togliere l'attributo o il <link>. */
+
+[data-ui="v2"] {
+  color-scheme: dark;
+}
+
+[data-ui="v2"] body {
+  font-family: var(--ui-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+/* I controlli ereditano già il font (font:inherit nel CSS esistente); la ripetizione rende la base autonoma. */
+[data-ui="v2"] :is(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+/* Focus visibile su ogni elemento interattivo, compreso lo splitter (che oggi lo rimuove). */
+[data-ui="v2"] :focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: var(--ui-focus-offset);
+}
+
+[data-ui="v2"] ::selection {
+  background: var(--ui-cyan);
+  color: var(--ui-abyss);
+}
+
+/* L'attributo hidden deve sempre nascondere, anche quando una classe imposta display (es. .engineering-grid). */
+[data-ui="v2"] [hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="v2"] *,
+  [data-ui="v2"] *::before,
+  [data-ui="v2"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

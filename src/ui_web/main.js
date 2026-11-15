@@ -1,30 +1,46 @@
-// Last updated: 2026-11-14
+// Last updated: 2026-11-15 (F9: vista polare, luce radente indicativa, OrbitControls, marker, avanzamento)
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { createSiteMarkers, northIsUp } from '/ui/globe-markers.js';
 
 const canvas = document.querySelector('#viewport');
 const message = document.querySelector('#message');
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#070d16');
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 1000);
-const INITIAL_CAMERA_Z = 9.2;
-camera.position.set(0, 0.3, INITIAL_CAMERA_Z);
+const INITIAL_DISTANCE = 8.4;
+// Vista iniziale dal polo sud: asse polare = Y del modello (verificato al caricamento con northIsUp).
+const POLAR_VIEW = new THREE.Spherical(INITIAL_DISTANCE, THREE.MathUtils.degToRad(152), THREE.MathUtils.degToRad(25));
+const HEMISPHERE_VIEW = new THREE.Spherical(9.2, THREE.MathUtils.degToRad(92), THREE.MathUtils.degToRad(18));
+camera.position.setFromSpherical(POLAR_VIEW);
 
-const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.10;
-document.querySelector('#webglStatus').textContent = 'READY';
+let renderer = null;
+try {
+  renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  document.querySelector('#webglStatus').textContent = 'READY';
+} catch (err) {
+  console.error(err);
+  document.querySelector('#webglStatus').textContent = 'NON DISPONIBILE';
+  document.querySelector('#webglStatus').className = 'warn';
+}
 
-scene.add(new THREE.HemisphereLight(0xa8c8e8, 0x151a25, 1.15));
-const sun = new THREE.DirectionalLight(0xfff0dc, 3.0);
-sun.position.set(-4, 3, 5);
-scene.add(sun);
-const rim = new THREE.DirectionalLight(0x3a91c7, 0.25);
-rim.position.set(4, -1, -4);
-scene.add(rim);
+// Illuminazione INDICATIVA: una luce radente quasi perpendicolare all'asse polare, per rendere
+// leggibile il rilievo della geometria. NON rappresenta la posizione reale del Sole (che l'API
+// non fornisce al globo): la didascalia #globeLightNote lo dichiara nell'interfaccia.
+scene.add(new THREE.HemisphereLight(0x9fb8d0, 0x1a2230, 0.42));
+const grazingLight = new THREE.DirectionalLight(0xfff1dc, 3.8);
+grazingLight.position.set(7, -0.45, 3.2); // circa 3° sotto il piano equatoriale: radente al polo sud
+scene.add(grazingLight);
+const earthshine = new THREE.DirectionalLight(0x5ccfe6, 0.14);
+earthshine.position.set(-5, -1.5, -4);
+scene.add(earthshine);
 
 const stars = new THREE.BufferGeometry();
 const positions = [];
@@ -35,112 +51,225 @@ for (let i=0;i<1800;i++) {
   positions.push(r*q*Math.cos(a),r*z,r*q*Math.sin(a));
 }
 stars.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-scene.add(new THREE.Points(stars,new THREE.PointsMaterial({color:0x9cb9d7,size:0.055,transparent:true,opacity:0.7})));
+scene.add(new THREE.Points(stars,new THREE.PointsMaterial({color:0x9cb9d7,size:0.055,transparent:true,opacity:0.6})));
 
 const root = new THREE.Group();
 scene.add(root);
 let moon = null;
-let dragging=false, lastX=0,lastY=0, targetRotX=0.12,targetRotY=0.3;
+
+// Controlli: OrbitControls r186 vendorizzato (D-F5). Nessun pan; zoom limitato.
+const controls = renderer ? new OrbitControls(camera, canvas) : null;
+if (controls) {
+  controls.enableDamping = !reducedMotion.matches;
+  controls.dampingFactor = 0.08;
+  controls.enablePan = false;
+  controls.minDistance = 4.2;
+  controls.maxDistance = 15;
+  controls.minPolarAngle = 0.05;
+  controls.maxPolarAngle = Math.PI - 0.05;
+  controls.rotateSpeed = 0.6;
+  controls.autoRotate = !reducedMotion.matches;
+  controls.autoRotateSpeed = 0.25; // rotazione attorno all'asse polare: il polo resta inquadrato
+  controls.addEventListener('start', () => { controls.autoRotate = false; });
+  reducedMotion.addEventListener?.('change', e => { controls.autoRotate = !e.matches && controls.autoRotate; controls.enableDamping = !e.matches; });
+}
+
+// --- Volo della camera (immediato con reduced motion) ---
+let flight = null;
+function flyTo(spherical) {
+  if (!controls) return;
+  const from = new THREE.Spherical().setFromVector3(camera.position);
+  const to = spherical.clone();
+  to.phi = THREE.MathUtils.clamp(to.phi, controls.minPolarAngle, controls.maxPolarAngle);
+  if (reducedMotion.matches) { camera.position.setFromSpherical(to); controls.update(); return; }
+  let dTheta = to.theta - from.theta;
+  dTheta = Math.atan2(Math.sin(dTheta), Math.cos(dTheta));
+  flight = { from, dTheta, to, t0: performance.now(), ms: 650 };
+}
+function stepFlight(now) {
+  if (!flight) return;
+  const k = Math.min(1, (now - flight.t0) / flight.ms);
+  const e = 1 - Math.pow(1 - k, 3);
+  const s = new THREE.Spherical(
+    flight.from.radius + (flight.to.radius - flight.from.radius) * e,
+    flight.from.phi + (flight.to.phi - flight.from.phi) * e,
+    flight.from.theta + flight.dTheta * e);
+  camera.position.setFromSpherical(s);
+  if (k >= 1) flight = null;
+}
+function resetView() { if (controls) controls.autoRotate = false; flyTo(POLAR_VIEW); }
+
+// --- Caricamento del modello con avanzamento reale (onProgress) ---
 const loader = new GLTFLoader();
 const modelUrl = '/data/terrain/global/Moon_NASA_LRO_8k_Topo_Small.glb';
+const progressBox = document.querySelector('#globeProgress');
+const progressBar = document.querySelector('#globeProgressBar');
+const progressText = document.querySelector('#globeProgressText');
+const globeError = document.querySelector('#globeError');
+const modelStatus = document.querySelector('#modelStatus');
 
-loader.load(modelUrl, gltf => {
-  moon = gltf.scene;
-  const box = new THREE.Box3().setFromObject(moon);
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-  const extent = Math.max(size.x,size.y,size.z);
-  if (!extent) throw new Error('Il modello lunare ha dimensioni nulle');
-  moon.scale.setScalar(4.5/extent);
-  moon.position.set(-center.x*moon.scale.x,-center.y*moon.scale.y,-center.z*moon.scale.z);
-  moon.traverse(obj => {
-    if (obj.isMesh) {
-      obj.castShadow = false;
-      obj.receiveShadow = true;
-      if (obj.material) {
-        obj.material.side = THREE.FrontSide;
+function setProgress(loaded, total) {
+  if (!progressBox) return;
+  progressBox.hidden = false;
+  const mb = (loaded / 1048576).toFixed(1);
+  if (total) {
+    const pct = Math.min(100, Math.round(loaded / total * 100));
+    progressBar?.setAttribute('aria-valuenow', String(pct));
+    progressBox.style.setProperty('--progress', `${pct}%`);
+    progressText.textContent = `Modello LRO ${pct} % · ${mb} di ${(total / 1048576).toFixed(1)} MB`;
+  } else {
+    progressBar?.removeAttribute('aria-valuenow');
+    progressText.textContent = `Modello LRO · ${mb} MB ricevuti`;
+  }
+}
 
-        const materials = Array.isArray(obj.material)
-          ? obj.material
-          : [obj.material];
-
-        for (const material of materials) {
-          if ('roughness' in material) material.roughness = 0.94;
-
-          // Filtraggio più uniforme alle diverse distanze.
-          for (const key of [
-            'map',
-            'normalMap',
-            'roughnessMap',
-            'metalnessMap',
-            'aoMap',
-            'emissiveMap'
-          ]) {
-            const texture = material[key];
-            if (!texture) continue;
-
-            texture.minFilter = THREE.LinearMipmapLinearFilter;
-            texture.magFilter = THREE.LinearFilter;
-            texture.generateMipmaps = true;
-            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-            texture.needsUpdate = true;
-          }
-
-          material.needsUpdate = true;
-        }
-      }
+let markerSet = null;
+let siteList = null;
+function buildMarkers() {
+  if (!moon || !siteList) return;
+  const layer = document.querySelector('#globeMarkers');
+  if (!layer) return;
+  markerSet = createSiteMarkers({
+    layer, model: moon, sites: siteList,
+    onSelect: name => {
+      const select = document.querySelector('#site');
+      select.value = name;
+      select.dispatchEvent(new Event('change'));
     }
   });
-  root.add(moon);
-  document.querySelector('#modelStatus').textContent='LOADED';
-  document.querySelector('#modelStatus').className='good';
-  message.textContent='NASA lunar model loaded. Drag to rotate; scroll to zoom.';
-}, undefined, err => {
-  console.error(err);
-  document.querySelector('#modelStatus').textContent='LOAD ERROR';
-  document.querySelector('#modelStatus').className='warn';
-  message.textContent='Model failed to load. Check the browser console and GLB path.';
-});
+  markerSet.select(document.querySelector('#site').value);
+}
+function focusSite(name) {
+  if (!markerSet) return;
+  markerSet.select(name);
+  const dir = markerSet.direction(name);
+  if (!dir || !controls) return;
+  controls.autoRotate = false;
+  const s = new THREE.Spherical().setFromVector3(dir);
+  s.radius = Math.min(camera.position.length(), 7.2);
+  s.phi = Math.min(s.phi, Math.PI - THREE.MathUtils.degToRad(24)); // inclinazione per vedere il bordo
+  flyTo(s);
+}
+// Chiamata dalla sezione dei siti più sotto, quando /api/sites risponde.
+function globeSitesReady(list) { siteList = list; buildMarkers(); }
+
+let modelLoading = false;
+function loadModel() {
+  // F11: niente caricamenti doppi (doppio clic su "Riprova") né secondo modello in scena.
+  if (!renderer || modelLoading || moon) return;
+  modelLoading = true;
+  globeError && (globeError.hidden = true);
+  modelStatus.textContent = 'LOADING';
+  modelStatus.className = 'warn';
+  setProgress(0, 0);
+  loader.load(modelUrl, gltf => {
+    modelLoading = false;
+    moon = gltf.scene;
+    const box = new THREE.Box3().setFromObject(moon);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const extent = Math.max(size.x,size.y,size.z);
+    if (!extent) throw new Error('Il modello lunare ha dimensioni nulle');
+    moon.scale.setScalar(4.5/extent);
+    moon.position.set(-center.x*moon.scale.x,-center.y*moon.scale.y,-center.z*moon.scale.z);
+    moon.traverse(obj => {
+      if (obj.isMesh) {
+        obj.castShadow = false;
+        obj.receiveShadow = true;
+        if (obj.material) {
+          obj.material.side = THREE.FrontSide;
+          const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+          for (const material of materials) {
+            if ('roughness' in material) material.roughness = 0.97;
+            if ('metalness' in material) material.metalness = 0;
+            for (const key of ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap']) {
+              const texture = material[key];
+              if (!texture) continue;
+              texture.minFilter = THREE.LinearMipmapLinearFilter;
+              texture.magFilter = THREE.LinearFilter;
+              texture.generateMipmaps = true;
+              texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+              texture.needsUpdate = true;
+            }
+            material.needsUpdate = true;
+          }
+        }
+      }
+    });
+    root.add(moon);
+    const up = northIsUp(moon);
+    if (up === false) console.warn('Convenzione UV inattesa: il nord della texture non è a +Y. Marker da verificare.');
+    if (progressBox) progressBox.hidden = true;
+    modelStatus.textContent='LOADED';
+    modelStatus.className='good';
+    message.textContent='Modello lunare caricato. Trascina per ruotare, rotella o +/− per lo zoom.';
+    buildMarkers();
+    if (markerSet) focusSite(document.querySelector('#site').value);
+  }, xhr => setProgress(xhr.loaded, xhr.lengthComputable ? xhr.total : 0), err => {
+    modelLoading = false;
+    console.error(err);
+    if (progressBox) progressBox.hidden = true;
+    modelStatus.textContent='LOAD ERROR';
+    modelStatus.className='warn';
+    message.textContent='Il modello lunare non è stato caricato. Controlla la connessione al server e riprova.';
+    if (globeError) globeError.hidden = false;
+  });
+}
+document.querySelector('#globeRetry')?.addEventListener('click', loadModel);
+loadModel();
+if (!renderer && globeError) {
+  globeError.hidden = false;
+  globeError.querySelector('p').textContent = 'WebGL non è disponibile in questo browser: il globo non può essere mostrato. I pannelli di analisi restano utilizzabili.';
+  globeError.querySelector('button').hidden = true;
+}
 
 function resize(){
  const w=canvas.clientWidth,h=canvas.clientHeight;
- if(!w||!h)return;
+ if(!w||!h||!renderer)return;
  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(canvas);
 resize();
 
-canvas.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});
-canvas.addEventListener('pointermove',e=>{
- if(!dragging)return;
- targetRotY+=(e.clientX-lastX)*0.008;
- targetRotX+=(e.clientY-lastY)*0.008;
- targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));
- lastX=e.clientX;lastY=e.clientY;
-});
-canvas.addEventListener('pointerup',()=>dragging=false);
-canvas.addEventListener('pointercancel',()=>dragging=false);
-canvas.addEventListener('dblclick',()=>{targetRotX=.12;targetRotY=.3;camera.position.set(0,.3,INITIAL_CAMERA_Z)});
-canvas.addEventListener('wheel',e=>{
- e.preventDefault();
- camera.position.z=Math.max(4.5,Math.min(15,camera.position.z+e.deltaY*.008));
-},{passive:false});
-
-function animate(){
- requestAnimationFrame(animate);
-
- // Rotazione automatica lenta, simile a una ripresa orbitale.
- // Quando l'utente trascina la Luna, la rotazione manuale prevale.
- if (!dragging) {
-   targetRotY += 0.0007;
- }
-
- root.rotation.x += (targetRotX-root.rotation.x)*.04;
- root.rotation.y += (targetRotY-root.rotation.y)*.04;
-
- renderer.render(scene,camera);
+// Comandi della camera (pulsanti) e tastiera sul canvas.
+function zoomBy(factor) {
+  if (!controls) return;
+  const d = THREE.MathUtils.clamp(camera.position.length() * factor, controls.minDistance, controls.maxDistance);
+  camera.position.setLength(d);
 }
-animate();
+function orbitBy(dTheta, dPhi) {
+  if (!controls) return;
+  controls.autoRotate = false;
+  const s = new THREE.Spherical().setFromVector3(camera.position);
+  s.theta += dTheta;
+  s.phi = THREE.MathUtils.clamp(s.phi + dPhi, controls.minPolarAngle, controls.maxPolarAngle);
+  camera.position.setFromSpherical(s);
+}
+document.querySelector('#globeZoomIn')?.addEventListener('click', () => zoomBy(0.85));
+document.querySelector('#globeZoomOut')?.addEventListener('click', () => zoomBy(1 / 0.85));
+document.querySelector('#globePolar')?.addEventListener('click', resetView);
+document.querySelector('#globeHemisphere')?.addEventListener('click', () => { if (controls) controls.autoRotate = false; flyTo(HEMISPHERE_VIEW); });
+canvas.tabIndex = 0;
+canvas.addEventListener('keydown', e => {
+  const step = THREE.MathUtils.degToRad(5);
+  const map = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+  if (map[e.key]) { orbitBy(...map[e.key]); e.preventDefault(); }
+  else if (e.key === '+' || e.key === '=') { zoomBy(0.85); e.preventDefault(); }
+  else if (e.key === '-') { zoomBy(1 / 0.85); e.preventDefault(); }
+  else if (e.key === 'Home' || e.key === '0') { resetView(); e.preventDefault(); }
+});
+canvas.addEventListener('dblclick', resetView);
+
+const markerLayer = document.querySelector('#globeMarkers');
+function animate(now){
+ requestAnimationFrame(animate);
+ if (!renderer || document.hidden) return;
+ stepFlight(now);
+ controls?.update();
+ renderer.render(scene,camera);
+ if (markerSet && markerLayer) markerSet.update(camera, canvas.clientWidth, canvas.clientHeight);
+}
+requestAnimationFrame(animate);
 
 // Coordinate dei siti: unica fonte src.astronomy.SITES tramite /api/sites (F5).
 let sites = {};
@@ -149,6 +278,7 @@ fetch('/api/sites', {cache: 'no-store'})
  .then(data => {
   sites = Object.fromEntries((data.sites || []).map(s => [s.name, [s.latitude_deg, s.longitude_east_deg]]));
   update();
+  globeSitesReady((data.sites || []).map(s => ({ name: s.name, lat: s.latitude_deg, lon: s.longitude_east_deg })));
  })
  .catch(() => { document.querySelector('#coords').textContent = 'coordinate non disponibili'; });
 const site = document.querySelector('#site');
@@ -169,9 +299,8 @@ function update(){
 }
 document.querySelector('#apply').addEventListener('click',update);
 site.addEventListener('change',update);
-document.querySelector('#reset').addEventListener('click',()=>{
- targetRotX=.12;targetRotY=.3;camera.position.set(0,.3,INITIAL_CAMERA_Z);
-});
+site.addEventListener('change',()=>focusSite(site.value));
+document.querySelector('#reset').addEventListener('click',resetView);
 const dateInput=document.querySelector('#date');
 const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
 dateInput.value=now.toISOString().slice(0,16);
@@ -185,12 +314,12 @@ update();
 const chart1 = document.querySelector('#chart1');
 const chart2 = document.querySelector('#chart2');
 const applyButton = document.querySelector('#apply');
-const liveStatus = document.querySelector('.right .metric:last-child .statusrow:last-of-type span:last-child');
+const liveStatus = document.querySelector('#ephemerisStatus');
 const chartNames = document.querySelectorAll('.graphname');
 
 if (chartNames.length >= 2) {
-  chartNames[0].textContent = 'SOLAR ELEVATION · JPL HORIZONS';
-  chartNames[1].textContent = 'EARTH ELEVATION · OPERATIONAL WINDOWS';
+  chartNames[0].textContent = 'Elevazione del Sole · JPL Horizons';
+  chartNames[1].textContent = 'Elevazione della Terra · finestre operative';
 }
 
 if (liveStatus) liveStatus.textContent = 'READY';
@@ -210,8 +339,8 @@ function drawEphemerisChart(canvas, observations, field, threshold, color, windo
   const w = cssW - left - right, h = cssH - top - bottom;
   const values = observations.map(o => o[field]).filter(Number.isFinite);
   if (values.length < 2) {
-    ctx.fillStyle = '#8295a9';
-    ctx.font = '11px sans-serif';
+    ctx.fillStyle = '#9AA6B2';
+    ctx.font = '12px Archivo, system-ui, sans-serif';
     ctx.fillText('Dati insufficienti', left, top + 20);
     return;
   }
@@ -226,27 +355,27 @@ function drawEphemerisChart(canvas, observations, field, threshold, color, windo
     const start = observations.findIndex(o => o.time_utc === win.start_utc);
     const end = observations.findIndex(o => o.time_utc === win.end_utc);
     if (start >= 0 && end >= start) {
-      ctx.fillStyle = 'rgba(76, 214, 164, 0.10)';
+      ctx.fillStyle = 'rgba(76, 195, 138, 0.14)';
       ctx.fillRect(x(start), top, Math.max(2, x(end) - x(start)), h);
     }
   }
 
-  ctx.font = '9px sans-serif';
+  ctx.font = '12px Archivo, system-ui, sans-serif';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for (let tick = Math.ceil(minY / 30) * 30; tick <= maxY; tick += 30) {
     const yy = y(tick);
-    ctx.strokeStyle = '#1c2c3c';
+    ctx.strokeStyle = '#323A44';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(left, yy); ctx.lineTo(cssW-right, yy); ctx.stroke();
-    ctx.fillStyle = '#8295a9';
+    ctx.fillStyle = '#9AA6B2';
     ctx.fillText(`${tick}°`, left - 5, yy);
   }
 
   if (Number.isFinite(threshold) && threshold >= minY && threshold <= maxY) {
     ctx.save();
     ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = '#f4b95f';
+    ctx.strokeStyle = color;
     ctx.beginPath(); ctx.moveTo(left, y(threshold)); ctx.lineTo(cssW-right, y(threshold)); ctx.stroke();
     ctx.restore();
   }
@@ -263,7 +392,7 @@ function drawEphemerisChart(canvas, observations, field, threshold, color, windo
   });
   ctx.stroke();
 
-  ctx.fillStyle = '#8295a9';
+  ctx.fillStyle = '#9AA6B2';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(observations[0].time_utc.slice(11, 16) + ' UTC', left, cssH - 5);
@@ -323,7 +452,7 @@ function renderOperationalWindows(data, observations, windows) {
 
   if (!windows.length) {
     tbody.innerHTML =
-      '<tr><td colspan="7" class="empty-windows">' +
+      '<tr><td colspan="8" class="empty-windows">' +
       'Nessuna finestra soddisfa contemporaneamente entrambe le soglie nel periodo selezionato.' +
       '</td></tr>';
     return;
@@ -339,13 +468,19 @@ function renderOperationalWindows(data, observations, windows) {
       `${win.sampled_span_hours ?? Math.max(0, win.duration_samples - 1)} h · ${win.duration_samples} campioni`,
       `${Number(win.min_sun_elevation_deg).toFixed(2)}°`,
       `${Number(win.min_earth_elevation_deg).toFixed(2)}°`,
+      win.ranking && Number.isFinite(win.ranking.score)
+        ? `#${win.ranking.rank} · ${win.ranking.score.toFixed(1)}`
+        : '—',
       'GEOMETRIC OK'
     ];
 
     values.forEach((value, i) => {
       const td = document.createElement('td');
       td.textContent = value;
-      if (i === 6) td.className = 'window-ok';
+      if (i === 6 && win.ranking) {
+        td.title = `Scienza ${win.ranking.science_score.toFixed(1)} · Ingegneria ${win.ranking.engineering_score.toFixed(1)} · Durata ${win.ranking.duration_score.toFixed(1)}. ${win.ranking.score_method}`;
+      }
+      if (i === 7) td.className = 'window-ok';
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
@@ -402,9 +537,9 @@ async function updateEphemerides() {
     if (observations.length < 2) throw new Error('Horizons ha restituito meno di due osservazioni.');
 
     drawEphemerisChart(chart1, observations, 'sun_elevation_deg',
-      data.thresholds.sun_elevation_deg, '#5be7f5', data.windows);
+      data.thresholds.sun_elevation_deg, '#EAD9A7', data.windows);
     drawEphemerisChart(chart2, observations, 'earth_elevation_deg',
-      data.thresholds.earth_elevation_deg, '#f4b95f', data.windows);
+      data.thresholds.earth_elevation_deg, '#5CCFE6', data.windows);
 
     document.querySelector('#targetName').textContent = data.site;
     document.querySelector('#coords').textContent =
@@ -451,9 +586,9 @@ async function updateEphemerides() {
       `${data.source} · ${observations.length} campioni · ${windows.length} finestre geometriche. ` +
       summary + ' — Non include verifica ostacoli o budget radio.';
     document.querySelectorAll('.graphname')[0].textContent =
-      `SOLAR ELEVATION · ${observations.length} SAMPLES`;
+      `Elevazione del Sole · ${observations.length} campioni`;
     document.querySelectorAll('.graphname')[1].textContent =
-      `EARTH ELEVATION · ${windows.length} WINDOWS`;
+      `Elevazione della Terra · ${windows.length} finestre`;
   } catch (err) {
     console.error('Ephemerides error:', err);
     if (liveStatus) {
@@ -539,9 +674,9 @@ window.addEventListener('resize', () => {
   if (window.lastEphemerides) {
     const d = window.lastEphemerides;
     drawEphemerisChart(chart1, d.observations, 'sun_elevation_deg',
-      d.thresholds.sun_elevation_deg, '#5be7f5', d.windows);
+      d.thresholds.sun_elevation_deg, '#EAD9A7', d.windows);
     drawEphemerisChart(chart2, d.observations, 'earth_elevation_deg',
-      d.thresholds.earth_elevation_deg, '#f4b95f', d.windows);
+      d.thresholds.earth_elevation_deg, '#5CCFE6', d.windows);
   }
 });
 
@@ -630,8 +765,8 @@ function drawThermalChart(samples) {
   }).filter(p => Number.isFinite(p.time) && Number.isFinite(p.temperature));
 
   if (points.length < 2) {
-    ctx.fillStyle = '#8295a9';
-    ctx.font = '11px sans-serif';
+    ctx.fillStyle = '#9AA6B2';
+    ctx.font = '12px Archivo, system-ui, sans-serif';
     ctx.fillText('Campioni termici non disponibili nel formato atteso.', 8, 22);
     return;
   }
@@ -646,14 +781,14 @@ function drawThermalChart(samples) {
   const rangeT = Math.max(1e-9, maxT - minT);
   const rangeX = Math.max(1e-9, maxX - minX);
 
-  ctx.strokeStyle = '#203141';
+  ctx.strokeStyle = '#323A44';
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + plotH * i / 4;
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width-pad.right, y); ctx.stroke();
   }
 
-  ctx.strokeStyle = '#f4b95f';
+  ctx.strokeStyle = '#E3B341';
   ctx.lineWidth = 2;
   ctx.beginPath();
   points.forEach((p, i) => {
@@ -663,8 +798,8 @@ function drawThermalChart(samples) {
   });
   ctx.stroke();
 
-  ctx.fillStyle = '#9aafc2';
-  ctx.font = '9px sans-serif';
+  ctx.fillStyle = '#9AA6B2';
+  ctx.font = '12px Archivo, system-ui, sans-serif';
   ctx.fillText(`${maxT.toFixed(1)} K`, 3, 13);
   ctx.fillText(`${minT.toFixed(1)} K`, 3, height - 25);
   ctx.fillText('TEMPO (s)', pad.left, height - 5);

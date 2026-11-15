@@ -1,0 +1,82 @@
+/* F9 · Design token della Web UI (fonte unica). Riferimento: reports/web_ui_consolidation/F9_DESIGN_PROPOSAL.md §3–4.
+   Questo foglio definisce solo font e custom properties con prefisso --ui-: non applica stili a nessun elemento.
+   Rollback: rimuovere il <link> a /ui/tokens.css in index.html (anche base.css dipende da questi token). */
+
+/* Archivo variabile (SIL OFL 1.1), self-hosted: vedi ui/fonts/SOURCE.md */
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url("/ui/fonts/archivo-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url("/ui/fonts/archivo-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  /* Palette di base (§3.1) */
+  --ui-abyss: #0A1322;          /* fondo stage e pagina */
+  --ui-anthracite: #191D23;     /* fondo pannelli */
+  --ui-anthracite-raised: #22272E; /* controlli, righe selezionate */
+  --ui-rule: #323A44;           /* filetti, griglie */
+  --ui-text: #E7ECF1;
+  --ui-text-muted: #9AA6B2;
+
+  /* Accenti e codici semantici (§3.2) */
+  --ui-blue: #2F6FDB;           /* solo azione primaria */
+  --ui-cyan: #5CCFE6;           /* selezione, focus, dati Terra */
+  --ui-sun: #EAD9A7;            /* solo dati Sole */
+  --ui-earth: var(--ui-cyan);
+  --ui-go: #4CC38A;
+  --ui-caution: #E3B341;
+  --ui-nogo: #F0605D;
+  --ui-inactive: #7D8995;
+
+  /* Classi qualità LROC */
+  --ui-lroc-primary: var(--ui-cyan);
+  --ui-lroc-interpolated: #E3B341;
+  --ui-lroc-unresolved: #A68BE0;
+  --ui-lroc-invalid: #56616D;
+
+  /* Tipografia (§4) */
+  --ui-font-sans: "Archivo", "Segoe UI Variable", system-ui, sans-serif;
+  --ui-text-12: 0.75rem;   /* 12 px: minimo */
+  --ui-text-14: 0.875rem;  /* 14 px: testo */
+  --ui-text-17: 1.0625rem; /* 17 px: titoli di sezione */
+  --ui-text-20: 1.25rem;
+  --ui-text-24: 1.5rem;
+  --ui-text-34: 2.125rem;  /* nome del sito (display) */
+  --ui-leading-body: 1.5;
+  --ui-leading-title: 1.25;
+  --ui-leading-value: 1.2;
+  --ui-width-condensed: 75%;
+  --ui-width-normal: 100%;
+  --ui-width-expanded: 125%;
+
+  /* Spaziatura: unità 4 px */
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-6: 24px;
+  --ui-space-8: 32px;
+  --ui-space-12: 48px;
+
+  /* Raggi di curvatura gerarchici */
+  --ui-radius-control: 3px;
+  --ui-radius-panel: 6px;
+  --ui-radius-pill: 2px;
+
+  /* Focus */
+  --ui-focus-ring: 2px solid var(--ui-cyan);
+  --ui-focus-offset: 2px;
+}

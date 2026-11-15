@@ -1,0 +1,5 @@
+# Dipendenze per i test (pytest). Include la Web UI.
+#   pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==9.1.1
+skyfield==1.55        # tests/test_astronomical_orientation.py (verifica offline DE421)

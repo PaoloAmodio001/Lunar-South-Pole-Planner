@@ -1,6 +1,6 @@
 <!-- Last updated: 2026-11-14 -->
 <!doctype html>
-<html lang="it">
+<html lang="it" data-ui="v2">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -333,41 +333,58 @@ body.profile-home #changeProfile {display:none}
 }
 </style>
 
+<!-- F9 UI v2: un foglio per componente; rollback = rimuovere la riga (vedi reports/web_ui_consolidation/F9_STEP1_REPORT.md) -->
+<link rel="stylesheet" href="/ui/tokens.css">
+<link rel="stylesheet" href="/ui/base.css">
+<link rel="stylesheet" href="/ui/shell.css">
+<link rel="stylesheet" href="/ui/globe.css">
+<link rel="stylesheet" href="/ui/panels.css">
+<link rel="stylesheet" href="/ui/profiles.css">
+<link rel="icon" href="/ui/icon.svg" type="image/svg+xml">
 </head>
 <body>
-<header>
- <div><div class="brand"><span>◈</span> LUNAR <span style="color:#e8f1fa">MISSION CONTROL</span></div><div class="sub">SOUTH POLE OPERATIONS // MISSION PLANNER</div></div>
- <div style="text-align:right"><div class="live">● SYSTEM ONLINE</div><div class="sub">NASA LRO DATASET · WEBGL VIEWPORT</div></div>
-<button type="button" id="changeProfile">CAMBIA PROFILO</button>
+<header class="shell-bar">
+ <div class="shell-brand">
+  <svg class="shell-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 18.5c4 1.6 8.4 2.4 13 2.4s9-.8 13-2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="25.6" r="2.4" fill="#5CCFE6"/></svg>
+  <span class="shell-title">Lunar South Pole Planner</span>
+ </div>
+ <p class="shell-context" id="shellContext" aria-live="polite"></p>
+ <ul class="shell-status" aria-label="Stato del sistema">
+  <li><span class="status-dot" id="hdrServerDot" data-state="unknown"></span><span class="status-name">Server</span> <strong id="hdrServer">verifica in corso</strong></li>
+  <li><span class="status-dot" id="hdrModelDot" data-state="unknown"></span><span class="status-name">Modello 3D</span> <strong id="hdrModel">—</strong></li>
+  <li><span class="status-dot" id="hdrEphemDot" data-state="unknown"></span><span class="status-name">Effemeridi</span> <strong id="hdrEphem">non calcolate</strong></li>
+  <li class="shell-clock"><time id="hdrClock">--:--:--</time> UTC</li>
+ </ul>
+ <button type="button" id="changeProfile">Cambia profilo</button>
 </header>
 
 <section id="profileHome" class="profile-home">
  <div class="profile-content">
   <div class="profile-eyebrow">LUNAR SOUTH POLE · EXPLORATION PLATFORM</div>
-  <h1>LUNAR SOUTH POLE PLANNER</h1>
+  <h1>Lunar South Pole Planner</h1>
   <p class="profile-subtitle">Esplora, comprendi e pianifica le missioni lunari.</p>
-  <div class="profile-question">COME VUOI UTILIZZARE LA PIATTAFORMA?</div>
+  <h2 class="profile-question">Come vuoi usare la piattaforma?</h2>
 
   <div class="profile-cards">
    <button class="profile-card" type="button" data-profile="public">
     <span class="profile-icon">◉</span>
-    <strong>PUBBLICO</strong>
+    <strong>Pubblico</strong>
     <span>Confronta i siti di atterraggio e le date. Scopri le condizioni di illuminazione e comunicazione.</span>
-    <span class="profile-enter">PUBLIC EXPLORER →</span>
+    <span class="profile-enter">Apri</span>
    </button>
 
    <button class="profile-card" type="button" data-profile="educator">
     <span class="profile-icon">⌘</span>
-    <strong>EDUCATORE</strong>
+    <strong>Educatore</strong>
     <span>Scopri la scienza lunare, i vincoli ambientali e perché alcuni siti sono più adatti di altri.</span>
-    <span class="profile-enter">EDUCATIONAL EXPLORER →</span>
+    <span class="profile-enter">Apri</span>
    </button>
 
    <button class="profile-card" type="button" data-profile="planner">
     <span class="profile-icon">⌖</span>
-    <strong>PIANIFICATORE DI MISSIONE</strong>
+    <strong>Pianificatore di missione</strong>
     <span>Accedi ai dati astronomici, alle analisi e alle simulazioni ingegneristiche avanzate.</span>
-    <span class="profile-enter">MISSION CONTROL →</span>
+    <span class="profile-enter">Apri</span>
    </button>
   </div>
   <div class="profile-footer">ONE LUNAR PLATFORM · THREE EXPERIENCES</div>
@@ -378,67 +395,120 @@ body.profile-home #changeProfile {display:none}
 <section id="educatorHome" class="educator-home">
  <div class="educator-content">
   <div class="profile-eyebrow">LUNAR SOUTH POLE · LEARNING CENTER</div>
-  <h1>EDUCATIONAL EXPLORER</h1>
+  <h1>Percorso didattico</h1>
   <p>Comprendi le sfide che rendono difficile pianificare una missione al polo sud lunare.</p>
 
   <div class="lesson-grid">
    <article class="lesson-card">
-    <span>01 · ILLUMINAZIONE</span>
+    <span>1. Illuminazione</span>
     <h2>La luce del Sole</h2>
     <p>Perché alcuni luoghi ricevono luce solare per periodi più lunghi mentre altri rimangono in ombra?</p>
    </article>
    <article class="lesson-card">
-    <span>02 · COMUNICAZIONI</span>
+    <span>2. Comunicazioni</span>
     <h2>La Terra all'orizzonte</h2>
     <p>Perché la posizione della Terra rispetto all'orizzonte influenza le comunicazioni dirette?</p>
    </article>
    <article class="lesson-card">
-    <span>03 · TERRENO</span>
+    <span>3. Terreno</span>
     <h2>Ombre e morfologia</h2>
     <p>Come pendii, crateri e ostacoli possono influenzare la scelta di una zona di atterraggio?</p>
    </article>
    <article class="lesson-card">
-    <span>04 · PIANIFICAZIONE</span>
+    <span>4. Pianificazione</span>
     <h2>Perché scegliere un sito?</h2>
     <p>Come si bilanciano illuminazione, comunicazioni, sicurezza e obiettivi scientifici?</p>
    </article>
   </div>
   <p class="educator-note">Le spiegazioni e le simulazioni didattiche saranno collegate progressivamente ai dati scientifici della piattaforma.</p>
-  <button type="button" class="profile-back" id="educatorBack">← CAMBIA PROFILO</button>
+  <button type="button" class="profile-back" id="educatorBack">Cambia profilo</button>
  </div>
 </section>
 
-<main>
- <section class="panel left">
-  <div class="panelhead">MISSION CONFIGURATION <span class="tag">01 / SETUP</span></div>
-  <div class="inner">
-   <div class="label">TARGET LANDING SITE</div>
-   <select id="site"><option>Shackleton</option><option>Connecting Ridge</option><option>Nobile</option></select>
-   <div class="label">MISSION START (UTC)</div><input id="date" type="datetime-local">
-   <div class="twocol"><div><div class="label">DURATION · HOURS</div><input id="duration" type="number" value="48" min="1" max="720"></div><div><div class="label">MIN. SUN ELEVATION</div><input id="elevation" type="number" value="5" min="-90" max="90"></div></div>
-    <div class="label">MIN. EARTH ELEVATION</div><input id="earthElevation" type="number" value="5" min="-90" max="90">
-   <div class="label">MISSION PRIORITIES</div>
-   <div class="twocol"><div><div class="label">SCIENCE</div><input id="science" type="number" value="5" min="1" max="5"></div><div><div class="label">ENGINEERING</div><input id="engineering" type="number" value="5" min="1" max="5"></div></div>
-   <button class="action" id="apply">UPDATE VISUALIZATION</button>
-   <button class="secondary" id="reset">RESET 3D VIEW</button>
-    <button class="secondary" id="exportMission">EXPORT MISSION JSON</button>
-   <div class="label" style="margin-top:23px">VIEW CONTROLS</div>
-   <div class="note">DRAG · ROTATE MOON<br>SCROLL · ZOOM<br>DOUBLE CLICK · RESET CAMERA</div>
-   <div class="label">SCENE ASSETS</div>
-   <div class="assetlist"><span class="asset">NASA LRO MODEL</span><span class="asset">WEBGL</span></div>
-   <div id="message">Preparing 3D viewport…</div>
+<main data-view="solar">
+ <nav class="shell-nav" aria-label="Aree di analisi">
+  <button type="button" data-nav="solar" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span>Illuminazione solare</span></button>
+  <button type="button" data-nav="earth"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.6 2.5 13.4 0 16M12 4c-2.5 2.6-2.5 13.4 0 16"/></svg><span>Comunicazione Terra</span></button>
+  <button type="button" data-nav="terrain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 19 9 8l4 6 3-4 6 9z"/></svg><span>Analisi del terreno</span></button>
+  <button type="button" data-nav="rover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15h18M6 15V10h12v5M9 10V7h6"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Missione rover</span></button>
+  <button type="button" data-nav="compare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>Confronto siti</span></button>
+  <button type="button" data-nav="status"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg><span>Stato missione</span></button>
+ </nav>
+ <aside class="shell-inspector" aria-label="Sito e configurazione">
+ <section class="panel right" aria-labelledby="siteCardTitle">
+  <div class="site-card">
+   <p class="site-card-kicker" id="siteCardTitle">Sito selezionato</p>
+   <strong id="targetName" class="site-name">Shackleton</strong>
+   <dl class="kv">
+    <div><dt>Coordinate (lat, lon E)</dt><dd id="coords">Caricamento…</dd></div>
+    <div><dt>Durata</dt><dd><span id="durationValue">48</span> h</dd></div>
+    <div><dt>Soglia Sole</dt><dd id="elevationValue">5°</dd></div>
+    <div><dt>Soglia Terra</dt><dd id="earthElevationValue">5°</dd></div>
+    <div><dt>Priorità scienza</dt><dd id="scienceValue">5 / 5</dd></div>
+    <div><dt>Priorità ingegneria</dt><dd id="engineeringValue">5 / 5</dd></div>
+   </dl>
+  </div>
+  <div class="status-card">
+   <h3>Stato dei sistemi</h3>
+   <dl class="kv">
+    <div><dt>Modello NASA LRO</dt><dd><span id="modelStatus" class="warn">LOADING</span></dd></div>
+    <div><dt>Renderer WebGL</dt><dd><span id="webglStatus" class="good">INITIALIZING</span></dd></div>
+    <div><dt>Effemeridi JPL Horizons</dt><dd><span id="ephemerisStatus" class="muted">WAITING</span></dd></div>
+   </dl>
+   <p class="note">Stati di configurazione e di calcolo dell'interfaccia: non sono telemetria di un veicolo.</p>
   </div>
  </section>
+ <section class="panel left" aria-labelledby="configTitle">
+  <h2 class="panel-title" id="configTitle">Parametri della missione</h2>
+  <div class="inner">
+   <label class="field"><span>Sito di atterraggio</span>
+   <select id="site"><option>Shackleton</option><option>Connecting Ridge</option><option>Nobile</option></select></label>
+   <fieldset class="field-group"><legend>Periodo</legend>
+    <label class="field"><span>Inizio (UTC)</span><input id="date" type="datetime-local"></label>
+    <label class="field"><span>Durata <small>ore</small></span><input id="duration" type="number" value="48" min="1" max="720"></label>
+   </fieldset>
+   <fieldset class="field-group twocol"><legend>Soglie di elevazione</legend>
+    <label class="field"><span>Sole <small>°</small></span><input id="elevation" type="number" value="5" min="-90" max="90"></label>
+    <label class="field"><span>Terra <small>°</small></span><input id="earthElevation" type="number" value="5" min="-90" max="90"></label>
+   </fieldset>
+   <fieldset class="field-group twocol"><legend>Priorità</legend>
+    <label class="field"><span>Scienza <small>1–5</small></span><input id="science" type="number" value="5" min="1" max="5"></label>
+    <label class="field"><span>Ingegneria <small>1–5</small></span><input id="engineering" type="number" value="5" min="1" max="5"></label>
+   </fieldset>
+   <button class="action" id="apply">Calcola effemeridi e finestre</button>
+   <div class="button-row">
+    <button class="secondary" id="reset">Vista polo sud</button>
+    <button class="secondary" id="exportMission">Esporta JSON</button>
+   </div>
+   <p id="message" role="status">Preparazione del globo 3D…</p>
+  </div>
+ </section>
+ </aside>
  <section class="panel center">
-  <div class="panelhead">LUNAR SURFACE / 3D EXPLORER <span class="tag">LIVE RENDER</span></div>
-  <div class="scene"><canvas id="viewport"></canvas>
+  <h2 class="visually-hidden">Globo lunare 3D</h2>
+  <div class="scene"><canvas id="viewport" role="img" aria-label="Globo lunare 3D visto dal polo sud, con i siti candidati. Frecce per ruotare, + e − per lo zoom, Home per tornare al polo."></canvas>
+   <div class="globe-markers" id="globeMarkers"></div>
+   <div class="globe-tools" role="group" aria-label="Controlli della vista">
+    <button type="button" id="globeZoomIn" aria-label="Avvicina">+</button>
+    <button type="button" id="globeZoomOut" aria-label="Allontana">−</button>
+    <button type="button" id="globePolar">Polo sud</button>
+    <button type="button" id="globeHemisphere">Emisfero</button>
+   </div>
+   <div class="globe-progress" id="globeProgress" hidden>
+    <div class="globe-progress-track" id="globeProgressBar" role="progressbar" aria-label="Caricamento del modello lunare" aria-valuemin="0" aria-valuemax="100"><span></span></div>
+    <p id="globeProgressText">Modello LRO · in attesa</p>
+   </div>
+   <div class="globe-error" id="globeError" role="alert" hidden>
+    <p>Il modello lunare non è stato caricato. Verifica che il server sia attivo e riprova.</p>
+    <button type="button" id="globeRetry">Riprova il caricamento</button>
+   </div>
 
 <div id="publicMissionPanel" class="public-ui">
  <div class="public-eyebrow">LUNAR SOUTH POLE EXPLORER</div>
  <h2>Esplora la Luna</h2>
  <p>Seleziona un sito per scoprire le condizioni della regione lunare.</p>
 
- <div class="public-label">SITI CANDIDATI</div>
+ <div class="public-label">Siti candidati</div>
  <div class="public-sites">
   <button type="button" class="public-site selected" data-public-site="Shackleton" aria-pressed="true">
    <strong>Shackleton</strong><span>Regione del polo sud</span>
@@ -451,45 +521,36 @@ body.profile-home #changeProfile {display:none}
   </button>
  </div>
 
- <div class="public-label">PARAMETRI MISSIONE · UTC</div>
+ <div class="public-label">Parametri della missione (UTC)</div>
  <div class="public-controls">
-  <label for="publicDate">DATA E ORA DI INIZIO (UTC)</label>
+  <label for="publicDate">Data e ora di inizio (UTC)</label>
   <input id="publicDate" type="datetime-local" required>
 
-  <label for="publicDuration">DURATA ANALISI · ORE</label>
+  <label for="publicDuration">Durata dell'analisi (ore)</label>
   <input id="publicDuration" type="number" value="48" min="1" max="720" step="1">
 
-  <label for="publicSunElevation">ELEVATION MINIMA DEL SOLE · GRADI</label>
+  <label for="publicSunElevation">Elevazione minima del Sole (°)</label>
   <input id="publicSunElevation" type="number" value="5" min="-90" max="90" step="1">
 
-  <label for="publicEarthElevation">ELEVATION MINIMA DELLA TERRA · GRADI</label>
+  <label for="publicEarthElevation">Elevazione minima della Terra (°)</label>
   <input id="publicEarthElevation" type="number" value="5" min="-90" max="90" step="1">
  </div>
 
  <div class="public-facts">
-  <div><span>LUCE SOLARE</span><strong>Analisi astronomica</strong></div>
-  <div><span>VISIBILITÀ DELLA TERRA</span><strong>Analisi geometrica</strong></div>
+  <div><span>Luce solare</span><strong>Analisi astronomica</strong></div>
+  <div><span>Visibilità della Terra</span><strong>Analisi geometrica</strong></div>
  </div>
 
- <button type="button" id="publicAnalyze" class="public-analyze">ANALIZZA QUESTO SITO</button>
- <button type="button" id="educationToggle" class="education-toggle">SCOPRI COME FUNZIONA</button>
+ <button type="button" id="publicAnalyze" class="public-analyze">Analizza questo sito</button>
+ <button type="button" id="educationToggle" class="education-toggle">Scopri come funziona</button>
  <div id="educationText" hidden>
   La luce solare può alimentare i sistemi di una missione. La visibilità geometrica della Terra è un elemento importante per pianificare le comunicazioni. Le condizioni cambiano con la posizione e il tempo.
  </div>
  <div id="publicMessage" role="status" aria-live="polite"></div>
 </div>
 
-   <div class="overlay">LUNAR SOUTH POLE<br>TOPOGRAPHIC VIEW<br><span style="color:var(--cyan)">●</span> NASA MODEL</div>
-   <div class="scenefoot"><span id="siteLabel">TARGET: SHACKLETON</span><span>INTERACTIVE VIEWPORT</span></div>
+   <div class="scenefoot"><span id="siteLabel">TARGET: SHACKLETON</span><span class="globe-light-note" id="globeLightNote">Luce radente indicativa: non è la posizione reale del Sole. Modello NASA LRO (topografia nella geometria).</span></div>
   </div>
- </section>
- <section class="panel right">
-  <div class="panelhead">MISSION TELEMETRY <span class="tag">02 / STATUS</span></div>
-  <div class="metric"><small>SELECTED TARGET</small><strong id="targetName" style="font-size:19px">Shackleton</strong><div class="statusrow"><span>Site coordinates</span><span id="coords">Loading…</span></div></div>
-  <div class="metric"><small>MISSION DURATION</small><strong id="durationValue">48</strong><span class="unit">HOURS</span></div>
-  <div class="metric"><small>3D MODEL STATUS</small><div class="statusrow"><span>NASA LRO GLB</span><span id="modelStatus" class="warn">LOADING</span></div><div class="statusrow"><span>WebGL renderer</span><span id="webglStatus" class="good">INITIALIZING</span></div></div>
-  <div class="metric"><small>MISSION PARAMETERS</small><div class="statusrow"><span>Science priority</span><span id="scienceValue">5 / 5</span></div><div class="statusrow"><span>Engineering priority</span><span id="engineeringValue">5 / 5</span></div><div class="statusrow"><span>Sun elevation threshold</span><span id="elevationValue">5°</span></div><div class="statusrow"><span>Earth elevation threshold</span><span id="earthElevationValue">5°</span></div></div>
-  <div class="metric"><small>VISUALIZATION STATUS</small><div class="statusrow"><span>Scene</span><span class="good">ACTIVE</span></div><div class="statusrow"><span>Orbit interaction</span><span class="good">ENABLED</span></div><div class="statusrow"><span>Live ephemerides</span><span class="warn">WAITING</span></div><p class="note">Telemetry values shown here are configuration and rendering status, not live spacecraft measurements.</p></div>
  </section>
  <div id="missionSplitter"
       class="mission-splitter"
@@ -502,56 +563,56 @@ body.profile-home #changeProfile {display:none}
   <span></span>
  </div>
  <section class="panel bottom">
-  <div class="panelhead">MISSION OVERVIEW <span class="tag">03 / ANALYSIS</span></div>
+  <h2 class="workspace-title" id="workspaceTitle">Illuminazione solare</h2>
   <div class="bottomgrid">
-   <div class="graph"><div class="graphname">SOLAR ELEVATION · WAITING FOR DATA</div><canvas id="chart1" class="chart"></canvas></div>
-   <div class="graph"><div class="graphname">EARTH ELEVATION · WAITING FOR DATA</div><canvas id="chart2" class="chart"></canvas></div>
+   <div class="graph graph-sun" data-views="solar"><div class="graphname">SOLAR ELEVATION · WAITING FOR DATA</div><canvas id="chart1" class="chart"></canvas></div>
+   <div class="graph graph-earth" data-views="earth"><div class="graphname">EARTH ELEVATION · WAITING FOR DATA</div><canvas id="chart2" class="chart"></canvas></div>
   </div>
 
-  <div class="analytics-section">
+  <div class="analytics-section" data-views="solar earth">
    <div class="windows-heading">
-    <span>MISSION ANALYTICS</span>
+    <span>Riepilogo delle effemeridi</span>
     <span id="analyticsStatus" class="tag">WAITING FOR DATA</span>
    </div>
    <div class="analytics-grid">
-    <div class="analytics-card"><small>SUN ELEVATION</small><strong id="sunStats">—</strong><span id="sunPass">—</span></div>
-    <div class="analytics-card"><small>EARTH ELEVATION</small><strong id="earthStats">—</strong><span id="earthPass">—</span></div>
-    <div class="analytics-card"><small>SIMULTANEOUS VISIBILITY</small><strong id="combinedPass">—</strong><span id="combinedCount">—</span></div>
-    <div class="analytics-card"><small>OPERATIONAL WINDOWS</small><strong id="analyticsWindowCount">—</strong><span id="analyticsWindowSpan">—</span></div>
+    <div class="analytics-card"><small>Elevazione del Sole</small><strong id="sunStats">—</strong><span id="sunPass">—</span></div>
+    <div class="analytics-card"><small>Elevazione della Terra</small><strong id="earthStats">—</strong><span id="earthPass">—</span></div>
+    <div class="analytics-card"><small>Visibilità simultanea</small><strong id="combinedPass">—</strong><span id="combinedCount">—</span></div>
+    <div class="analytics-card"><small>Finestre operative</small><strong id="analyticsWindowCount">—</strong><span id="analyticsWindowSpan">—</span></div>
    </div>
    <div id="analyticsDiagnosis" class="window-notice">In attesa di campioni astronomici.</div>
   </div>
 
-    <section class="engineering-section" id="missionEngineSection">
+    <section class="engineering-section" id="missionEngineSection" data-views="status">
      <div class="windows-heading">
-      <span>MISSION ENGINE · ORCHESTRATOR</span>
+      <span>Mission Engine (orchestratore)</span>
       <span class="tag" id="missionState">IDLE</span>
      </div>
      <div class="engineering-grid">
       <label>Configurazione di missione<select id="missionConfigSelect"></select></label>
       <label>File JSON<input id="missionConfigFile" type="file" accept=".json,application/json" hidden></label>
      </div>
-     <button id="missionValidate" class="action">VALIDATE CONFIG</button>
-     <button id="missionRun" class="action">RUN MISSION</button>
+     <button id="missionValidate" class="action">Valida configurazione</button>
+     <button id="missionRun" class="action">Esegui missione</button>
      <div id="missionStatusText" class="engineering-result">Nessuna missione avviata da questa interfaccia.</div>
      <ul id="missionValidation" class="mission-list"></ul>
      <div id="missionResults"></div>
-     <div class="label">REPORT DISPONIBILI</div>
+     <div class="label">Report disponibili</div>
      <ul id="missionReports" class="mission-list"><li>Caricamento…</li></ul>
      <div class="window-notice">Esecuzione del vero orchestratore (src/mission_orchestrator.py). Risultati preliminari: non certificano la sicurezza di atterraggio.</div>
     </section>
 
-    <section class="engineering-section" id="scienceSection">
+    <section class="engineering-section" id="scienceSection" data-views="terrain rover compare">
      <div class="windows-heading">
-      <span>SCIENCE TOOLS · MODULI SCIENTIFICI</span>
+      <span>Moduli scientifici</span>
       <span class="tag" id="sciState">PRONTO</span>
      </div>
      <div class="sci-tools" role="group" aria-label="Strumento scientifico">
-      <button type="button" data-sci-tool="dem-audit">AUDIT DEM</button>
-      <button type="button" data-sci-tool="terrain">TERRENO LOCALE</button>
-      <button type="button" data-sci-tool="horizon">ORIZZONTE</button>
-      <button type="button" data-sci-tool="rover-plan">PERCORSO ROVER</button>
-      <button type="button" data-sci-tool="site-comparison">CONFRONTO SITI</button>
+      <button type="button" data-sci-tool="dem-audit">Audit DEM</button>
+      <button type="button" data-sci-tool="terrain">Terreno locale</button>
+      <button type="button" data-sci-tool="horizon">Orizzonte</button>
+      <button type="button" data-sci-tool="rover-plan">Percorso rover</button>
+      <button type="button" data-sci-tool="site-comparison">Confronto siti</button>
      </div>
      <div class="engineering-grid" id="sciRasterRow">
       <label>Raster (catalogo locale)<select id="sciRaster"></select></label>
@@ -597,21 +658,21 @@ body.profile-home #changeProfile {display:none}
       </div>
       <div class="window-notice">Richiede la rete (NASA/JPL Horizons): non disponibile offline.</div>
      </div>
-     <button id="sciRun" class="action">RUN ANALYSIS</button>
+     <button id="sciRun" class="action">Avvia analisi</button>
      <div id="sciResult"><div class="engineering-result">Seleziona uno strumento e avvia l'analisi.</div></div>
      <div class="window-notice">Ogni risultato proviene dal modulo scientifico originale indicato; coordinate di griglia DEM, frame geodetico non validato.</div>
     </section>
 
-    <section class="lroc-quality-section" id="lrocQualitySection">
+    <section class="lroc-quality-section" id="lrocQualitySection" data-views="terrain">
      <div class="windows-heading">
-      <span>LROC TERRAIN QUALITY · DTM CONFIDENCE</span>
+      <span>Qualità del terreno LROC (confidenza DTM)</span>
       <span class="tag" id="lrocQualityStatus">LOADING</span>
      </div>
      <div class="lroc-quality-grid">
-      <div class="lroc-quality-card"><small>PRIMARY · CONF 14</small><strong id="lrocPrimary">—</strong><span id="lrocPrimaryArea">—</span></div>
-      <div class="lroc-quality-card"><small>INTERPOLATED · CONF 4</small><strong id="lrocInterpolated">—</strong><span id="lrocInterpolatedArea">—</span></div>
-      <div class="lroc-quality-card"><small>UNRESOLVED</small><strong id="lrocUnresolved">—</strong><span id="lrocUnresolvedArea">—</span></div>
-      <div class="lroc-quality-card"><small>INVALID / EXCLUDED</small><strong id="lrocInvalid">—</strong><span id="lrocInvalidArea">—</span></div>
+      <div class="lroc-quality-card"><small>Primary (conf. 14)</small><strong id="lrocPrimary">—</strong><span id="lrocPrimaryArea">—</span></div>
+      <div class="lroc-quality-card"><small>Interpolated (conf. 4)</small><strong id="lrocInterpolated">—</strong><span id="lrocInterpolatedArea">—</span></div>
+      <div class="lroc-quality-card"><small>Unresolved</small><strong id="lrocUnresolved">—</strong><span id="lrocUnresolvedArea">—</span></div>
+      <div class="lroc-quality-card"><small>Invalid / esclusi</small><strong id="lrocInvalid">—</strong><span id="lrocInvalidArea">—</span></div>
      </div>
      <div class="lroc-quality-bar" role="img" aria-label="Distribuzione delle classi di qualità LROC">
       <span id="lrocBarPrimary" class="lroc-primary"></span>
@@ -627,15 +688,15 @@ body.profile-home #changeProfile {display:none}
      </div>
      <div class="window-notice" id="lrocCoverage">In attesa del report di qualità.</div>
      <div class="lroc-quality-warning">
-      <strong>LIMITAZIONI SCIENTIFICHE</strong>
+      <strong>Limitazioni scientifiche</strong>
       <ul id="lrocWarnings"><li>Avvertenze in caricamento.</li></ul>
      </div>
     </section>
 
-   <div class="engineering-section">
+   <div class="engineering-section" data-views="earth">
     <div class="windows-heading">
-     <span>COMMUNICATION INTELLIGENCE · RF LINK BUDGET</span>
-     <span class="tag">PRELIMINARY MODEL</span>
+     <span>Link budget RF</span>
+     <span class="tag">Modello preliminare</span>
     </div>
     <div class="engineering-grid">
      <label>Distanza (km)<input id="rfDistance" type="number" value="384400" min="0.001" step="any"></label>
@@ -647,20 +708,20 @@ body.profile-home #changeProfile {display:none}
      <label>Sensibilità RX (dBm)<input id="rfSensitivity" type="number" value="-120" step="any"></label>
      <label>Margine richiesto (dB)<input id="rfMargin" type="number" value="3" min="0" step="any"></label>
     </div>
-    <button id="calculateRF" class="action">CALCULATE RF LINK</button>
+    <button id="calculateRF" class="action">Calcola collegamento RF</button>
     <div id="rfStatus" class="engineering-result">In attesa di calcolo RF.</div>
     <div class="engineering-results">
-     <div><small>FREE SPACE PATH LOSS</small><strong id="rfPathLoss">—</strong></div>
-     <div><small>RECEIVED POWER</small><strong id="rfReceived">—</strong></div>
-     <div><small>LINK MARGIN</small><strong id="rfLinkMargin">—</strong></div>
-     <div><small>REQUIRED MARGIN CHECK</small><strong id="rfCheck">—</strong></div>
+     <div><small>Attenuazione nello spazio libero</small><strong id="rfPathLoss">—</strong></div>
+     <div><small>Potenza ricevuta</small><strong id="rfReceived">—</strong></div>
+     <div><small>Margine del collegamento</small><strong id="rfLinkMargin">—</strong></div>
+     <div><small>Verifica del margine richiesto</small><strong id="rfCheck">—</strong></div>
     </div>
    </div>
 
-   <div class="engineering-section">
+   <div class="engineering-section" data-views="rover status">
     <div class="windows-heading">
-     <span>THERMAL INTELLIGENCE · SINGLE NODE</span>
-     <span class="tag">RK4 SIMULATION</span>
+     <span>Simulazione termica a nodo singolo</span>
+     <span class="tag">Integrazione RK4</span>
     </div>
     <div class="engineering-grid">
      <label>Durata (s)<input id="thDuration" type="number" value="3600" min="1" step="any"></label>
@@ -678,27 +739,27 @@ body.profile-home #changeProfile {display:none}
      <label>Accoppiamento (W/K)<input id="thCoupling" type="number" value="0" min="0" step="any"></label>
      <label>Temperatura sink (K)<input id="thSink" type="number" value="100" min="0.01" step="any"></label>
     </div>
-    <button id="calculateThermal" class="action">RUN THERMAL SIMULATION</button>
+    <button id="calculateThermal" class="action">Avvia simulazione termica</button>
     <div id="thermalStatus" class="engineering-result">In attesa di simulazione termica.</div>
     <div class="engineering-results">
-     <div><small>FINAL TEMPERATURE</small><strong id="thFinal">—</strong></div>
-     <div><small>MINIMUM TEMPERATURE</small><strong id="thMin">—</strong></div>
-     <div><small>MAXIMUM TEMPERATURE</small><strong id="thMax">—</strong></div>
-     <div><small>TIME SAMPLES</small><strong id="thSamples">—</strong></div>
+     <div><small>Temperatura finale</small><strong id="thFinal">—</strong></div>
+     <div><small>Temperatura minima</small><strong id="thMin">—</strong></div>
+     <div><small>Temperatura massima</small><strong id="thMax">—</strong></div>
+     <div><small>Campioni temporali</small><strong id="thSamples">—</strong></div>
     </div>
     <canvas id="thermalChart" class="thermal-chart" aria-label="Andamento della temperatura simulata"></canvas>
    </div>
 
-   <div class="windows-section">
+   <div class="windows-section" data-views="solar earth status">
    <div class="windows-heading">
-    <span>OPERATIONAL WINDOWS</span>
+    <span>Finestre operative (Sole e Terra sopra soglia)</span>
     <span id="windowCount" class="tag">WAITING FOR DATA</span>
    </div>
    <div class="windows-table-wrap">
     <table class="windows-table">
      <thead><tr>
-      <th>#</th><th>START · UTC</th><th>END · UTC</th>
-      <th>SPAN</th><th>MIN SUN</th><th>MIN EARTH</th><th>STATUS</th>
+      <th>N.</th><th>Inizio (UTC)</th><th>Fine (UTC)</th>
+      <th>Durata</th><th>Sole min.</th><th>Terra min.</th><th><abbr title="Ranking euristico src.mission_planner.rank_operational_windows (priorità scienza 5, ingegneria 5): elevazioni medie e durata relativa. Non qualificato per il volo.">Rank · punteggio</abbr></th><th>Esito</th>
      </tr></thead>
      <tbody id="operationalWindows">
       <tr><td colspan="7" class="empty-windows">In attesa di effemeridi JPL Horizons…</td></tr>
@@ -722,6 +783,7 @@ body.profile-home #changeProfile {display:none}
 <script type="module" src="/main.js"></script>
 <script src="/mission.js" defer></script>
 <script src="/science.js" defer></script>
+<script src="/ui/shell.js" defer></script>
 
 <script>
 (() => {
@@ -856,16 +918,19 @@ body.profile-home #changeProfile {display:none}
 
  function selectProfile(profile) {
   body.classList.remove('profile-home','public-mode','educator-mode');
+  // D-F3: il profilo scelto viene ricordato tra le visite (localStorage, sempre in try/catch).
+  try { localStorage.setItem('lspp.profile', profile); } catch (_) {}
+  body.dataset.profile = profile;
 
   if (profile === 'public') {
    body.classList.add('public-mode');
-   changeProfile.textContent = 'CAMBIA PROFILO';
+   changeProfile.textContent = 'Cambia profilo';
    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
   } else if (profile === 'educator') {
    body.classList.add('educator-mode');
-   changeProfile.textContent = 'CAMBIA PROFILO';
+   changeProfile.textContent = 'Cambia profilo';
   } else if (profile === 'planner') {
-   changeProfile.textContent = 'CAMBIA PROFILO';
+   changeProfile.textContent = 'Cambia profilo';
    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
   }
  }
@@ -873,6 +938,8 @@ body.profile-home #changeProfile {display:none}
  function showProfileHome() {
   body.classList.remove('public-mode','educator-mode');
   body.classList.add('profile-home');
+  body.dataset.profile = 'home';
+  try { localStorage.removeItem('lspp.profile'); } catch (_) {}
  }
 
  document.querySelectorAll('[data-profile]').forEach(button => {
@@ -882,8 +949,12 @@ body.profile-home #changeProfile {display:none}
  changeProfile.addEventListener('click', showProfileHome);
  document.getElementById('educatorBack').addEventListener('click', showProfileHome);
 
- // All'apertura il sistema chiede sempre chi utilizzerà la piattaforma.
- showProfileHome();
+ // D-F3: se un profilo è già stato scelto lo si riapre; altrimenti si chiede chi userà la piattaforma.
+ // "Cambia profilo" resta sempre visibile nella barra superiore.
+ let remembered = null;
+ try { remembered = localStorage.getItem('lspp.profile'); } catch (_) {}
+ if (['public','educator','planner'].includes(remembered)) selectProfile(remembered);
+ else showProfileHome();
 })();
 </script>
 

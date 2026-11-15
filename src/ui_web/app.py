@@ -34,6 +34,7 @@ from src.paths import PROJECT_ROOT
 
 from src.astronomy import SITES, query_observations, AstronomyError
 from src.mission_planning import find_operational_windows
+from src.mission_planner import MissionConfig, rank_operational_windows
 from src.mission_analytics import summarize_ephemerides
 from src.communications import calculate_link_budget
 from src.thermal_model import simulate_single_node_thermal
@@ -64,6 +65,10 @@ LROC_REPORT_GLOB = "lroc-quality-mask-*.json"
 # --- Risorse statiche consentite (whitelist esplicita) -----------------------
 VENDOR_THREE_DIR = UI_DIR / "vendor" / "three"
 VENDOR_THREE_PREFIX = "/vendor/three/"
+# Asset grafici della UI (F9, decisione D-F1): sola lettura, estensioni limitate.
+UI_ASSETS_DIR = UI_DIR / "ui"
+UI_ASSETS_PREFIX = "/ui/"
+UI_ASSETS_SUFFIXES = {".css", ".js", ".woff2", ".svg"}
 STATIC_ROUTES = {
     "/": UI_DIR / "index.html",
     "/index.html": UI_DIR / "index.html",
@@ -81,6 +86,9 @@ CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
     ".glb": "model/gltf-binary",
+    ".css": "text/css; charset=utf-8",
+    ".woff2": "font/woff2",
+    ".svg": "image/svg+xml",
 }
 
 
@@ -112,7 +120,42 @@ def resolve_static(url_path):
         if base not in target.parents or not target.is_file():
             return None
         return target
+    if url_path.startswith(UI_ASSETS_PREFIX):
+        relative = url_path[len(UI_ASSETS_PREFIX):]
+        if "\\" in relative or "\x00" in relative:
+            return None
+        base = UI_ASSETS_DIR.resolve()
+        target = (base / relative).resolve()
+        if (base not in target.parents or target.suffix.lower() not in UI_ASSETS_SUFFIXES
+                or not target.is_file()):
+            return None
+        return target
     return None
+
+
+def attach_window_ranking(windows, windows_payload, sun_values, earth_values):
+    """F11: aggiunge a ogni finestra il ranking di src.mission_planner.
+
+    Algoritmo invariato (rank_operational_windows) con le priorità predefinite
+    di MissionConfig (scienza 5, ingegneria 5). Punteggio euristico, non
+    qualificato per il volo: misura solo elevazioni medie e durata relativa.
+    """
+    defaults = MissionConfig(site="", start_date_utc="")
+    ranked = rank_operational_windows(windows, sun_values, earth_values, defaults)
+    by_start = {item["start_index"]: item for item in ranked}
+    for window, payload in zip(windows, windows_payload):
+        item = by_start.get(int(window.start_index))
+        if item is None:
+            continue
+        payload["ranking"] = {
+            key: item[key] for key in (
+                "rank", "score", "science_score", "engineering_score",
+                "duration_score", "sun_mean_elevation_deg",
+                "earth_mean_elevation_deg", "score_method")
+        }
+        payload["ranking"]["science_priority"] = defaults.science_priority
+        payload["ranking"]["engineering_priority"] = defaults.engineering_priority
+    return windows_payload
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -134,7 +177,22 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(404, {"status": "error", "error": "Risorsa non trovata."})
         content_type = CONTENT_TYPES.get(target.suffix.lower(), "application/octet-stream")
         try:
-            size = target.stat().st_size
+            stat = target.stat()
+            size = stat.st_size
+        except OSError:
+            return self.send_json(404, {"status": "error", "error": "Risorsa non trovata."})
+        # F11: validatore debole (dimensione + mtime). "no-cache" resta: il browser
+        # rivalida sempre, ma un file invariato (es. GLB da 81,5 MB) torna 304 senza corpo.
+        etag = f'W/"{size:x}-{stat.st_mtime_ns:x}"'
+        last_modified = self.date_time_string(int(stat.st_mtime))
+        if etag in [tag.strip() for tag in self.headers.get("If-None-Match", "").split(",")]:
+            self.send_response(304)
+            self.send_header("ETag", etag)
+            self.send_header("Last-Modified", last_modified)
+            self.send_header("Cache-Control", "no-cache")
+            self.end_headers()
+            return
+        try:
             stream = target.open("rb")
         except OSError:
             return self.send_json(404, {"status": "error", "error": "Risorsa non trovata."})
@@ -143,6 +201,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(size))
             self.send_header("Cache-Control", "no-cache")
+            self.send_header("ETag", etag)
+            self.send_header("Last-Modified", last_modified)
             self.send_header("X-Content-Type-Options", "nosniff")
             self.end_headers()
             if not head_only:
@@ -449,6 +509,7 @@ class Handler(BaseHTTPRequestHandler):
                 "min_sun_elevation_deg": round(min(sun_values[w.start_index:w.end_index + 1]), 2),
                 "min_earth_elevation_deg": round(min(earth_values[w.start_index:w.end_index + 1]), 2),
             } for w in windows]
+            attach_window_ranking(windows, windows_payload, sun_values, earth_values)
             analytics = summarize_ephemerides(
                 observations_payload,
                 min_sun_elevation_deg=min_sun,
